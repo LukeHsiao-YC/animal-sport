@@ -108,7 +108,7 @@
 
     const CombinedCard = ({ card, drawAnim = false }) => {
       const [imgError, setImgError] = useState(false);
-      const [imgAttempt, setImgAttempt] = useState(0); // 0: 嘗試 images/ 目錄, 1: 嘗試根目錄
+      const [imgAttempt, setImgAttempt] = useState(0); // 0: 嘗試 image/ 目錄, 1: 嘗試根目錄
 
       useEffect(() => {
         setImgError(false);
@@ -123,8 +123,8 @@
       const borderClass = isRed ? 'border-red-700' : isBlue ? 'border-blue-600' : 'border-green-600';
       const textClass = isRed ? 'text-red-800' : isBlue ? 'text-blue-800' : 'text-green-800';
 
-      // 智慧路徑：先嘗試 images/R_1.png，失敗則嘗試 R_1.png
-      const currentSrc = imgAttempt === 0 ? `./images/${card.imageFile}` : `./${card.imageFile}`;
+      // 💡 修正路徑：對應 GitHub 上的 'image' 資料夾 (移除 's')
+      const currentSrc = imgAttempt === 0 ? `./image/${card.imageFile}` : `./${card.imageFile}`;
 
       return (
         <div className={`w-full max-w-sm mx-auto bg-white rounded-3xl shadow-xl border-4 ${borderClass} overflow-hidden flex flex-col ${drawAnim ? 'animate-card-draw' : ''}`}>
@@ -142,7 +142,7 @@
                   className="w-full h-full object-contain absolute inset-0 p-2 z-10"
                   onError={() => {
                     if (imgAttempt === 0) {
-                      // 找不到 images/ 內的圖，改嘗試同層級根目錄
+                      // 找不到 image/ 內的圖，改嘗試同層級根目錄
                       setImgAttempt(1);
                     } else {
                       // 兩個地方都找不到，顯示錯誤佔位符
