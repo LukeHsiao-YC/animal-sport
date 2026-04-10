@@ -30,6 +30,10 @@
     }
     .animate-fade-in { animation: fadeIn 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
     .animate-card-draw { animation: cardDraw 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards; }
+    
+    /* 隱藏捲軸但保留捲動功能 */
+    .no-scrollbar::-webkit-scrollbar { display: none; }
+    .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
   </style>
 </head>
 <body class="bg-[#FFFDF9] font-sans text-gray-800">
@@ -56,14 +60,14 @@
       { id: 'R-10', team: 'red', category: '有氧運動', titleZh: '大象踏步走', titleEn: 'Elephant March', animal: '大象', imageFile: 'R_10.png', emoji: '🐘', instruction: '1. 起始姿勢：雙腳與臀同寬，身體前彎，雙手置於前方地板上，使身體呈倒「V」字型。 2. 動作執行：收緊腹部，單腳膝蓋伸直，另一腳彎曲，輪流交替模擬步伐。', safety: '動作要有力但不要震壞地板。' },
 
       // 🔵 藍隊：肌力訓練
-      { id: 'B-01', team: 'blue', category: '肌力訓練', titleZh: '大猩猩蹲蹲', titleEn: 'squats', animal: '大猩猩', imageFile: 'B_1.png', emoji: '🦍', instruction: '雙腳打開與肩膀同寬，屁股往後座，就像要坐椅子一樣，背盡量打直。', safety: '膝蓋不要超過腳尖，重心放在腳跟，慢慢下蹲在站起來。' },
+      { id: 'B-01', team: 'blue', category: '肌力訓練', titleZh: '大猩猩深蹲', titleEn: 'squats', animal: '大猩猩', imageFile: 'B_1.png', emoji: '🦍', instruction: '雙腳打開與肩膀同寬，屁股往後座，就像要坐椅子一樣，背盡量打直。', safety: '膝蓋不要超過腳尖，重心放在腳跟，慢慢下蹲在站起來。' },
       { id: 'B-02', team: 'blue', category: '肌力訓練', titleZh: '長頸鹿弓步蹲', titleEn: 'lunges', animal: '長頸鹿', imageFile: 'B_2.png', emoji: '🦒', instruction: '挺胸站立，邁出一腳並雙膝下蹲至約 90 度，前膝不超過腳尖，後膝靠近地面，重心置於前腳，核心收緊保持垂直上下。', safety: '前腳膝蓋不要超過腳尖，後腳膝蓋不要撞到地板。保持平衡慢慢做。' },
       { id: 'B-03', team: 'blue', category: '肌力訓練', titleZh: '紅鶴踮腳尖', titleEn: 'calf raise', animal: '紅鶴', imageFile: 'B_3.png', emoji: '🦩', instruction: '雙腳與肩同寬站立，腳尖朝前，緩慢踮起腳跟，用前腳掌支撐，盡量抬高，停頓 1-2 秒，感受小腿肌肉繃緊，緩慢降下腳跟，回到起始位置。', safety: '身體站直，可以扶牆壁或椅子保持平衡。' },
       { id: 'B-04', team: 'blue', category: '肌力訓練', titleZh: '壁虎伏牆挺身', titleEn: 'wall push', animal: '壁虎', imageFile: 'B_4.png', emoji: '🦎', instruction: '站立於牆前約一步距離，雙手撐牆與肩同寬，身體保持直線前傾45度，彎肘讓胸口靠近牆面，呼氣發力推回至起始位置。', safety: '推的時候身體保持一直線，肚子收緊，背不要凹下去或拱起。' },
       { id: 'B-05', team: 'blue', category: '肌力訓練', titleZh: '貓頭鷹轉圈', titleEn: 'arm circle', animal: '貓頭鷹', imageFile: 'B_5.png', emoji: '🦉', instruction: '腳與肩同寬站立，挺胸，手臂向兩側平舉成一直線，先正向畫小圈五次，再逆向畫小圈重複。', safety: '雙肩放輕鬆，不要聳肩，畫圈時手臂保持伸直。' },
       { id: 'B-06', team: 'blue', category: '肌力訓練', titleZh: '螃蟹搭拱橋', titleEn: 'Bridge', animal: '螃蟹', imageFile: 'B_6.png', emoji: '🦀', instruction: '仰躺屈膝，腳掌踩地，以臀部發力抬起骨盆，使肩膀至膝蓋呈一直線，最高點夾緊臀部停五秒，緩慢下放，避免下背代償拱起。', safety: '肚子要收緊，不要拱背。' },
-      { id: 'B-07', team: 'blue', category: '肌力訓練', titleZh: '鱷魚1支撐', titleEn: 'plank', animal: '鱷魚', imageFile: 'B_7.png', emoji: '🐊', instruction: '手肘在肩膀正下方，前臂與地面平行，從頭、肩膀、臀部到腳跟呈一直線，腹部與臀部收緊。', safety: '背要呈現一直線，不可以凹下去或凸起來，眼睛看地板，不要憋氣。' },
-      { id: 'B-08', team: 'blue', category: '肌力訓練', titleZh: '甲蟲翻肚皮', titleEn: 'Dead bug', animal: '甲蟲', imageFile: 'B_8.png', emoji: '🪲', instruction: '平躺，起始位置雙手舉高與身體垂直，雙腳屈膝舉起呈90度。吐氣時，左腳往下方延伸腳跟不碰地，同時右手向後伸直，回到起始位置，再換邊。', safety: '動作越慢越好，背貼緊地板。' },
+      { id: 'B-07', team: 'blue', category: '肌力訓練', titleZh: '鱷魚支撐', titleEn: 'plank', animal: '鱷魚', imageFile: 'B_7.png', emoji: '🐊', instruction: '手肘在肩膀正下方，前臂與地面平行，從頭、肩膀、臀部到腳跟呈一直線，腹部與臀部收緊。', safety: '背要呈現一直線，不可以凹下去或凸起來，眼睛看地板，不要憋氣。' },
+      { id: 'B-08', team: 'blue', category: '肌力訓練', titleZh: '甲蟲翻肚', titleEn: 'Dead bug', animal: '甲蟲', imageFile: 'B_8.png', emoji: '🪲', instruction: '平躺，起始位置雙手舉高與身體垂直，雙腳屈膝舉起呈90度。吐氣時，左腳往下方延伸腳跟不碰地，同時右手向後伸直，回到起始位置，再換邊。', safety: '動作越慢越好，背貼緊地板。' },
       { id: 'B-09', team: 'blue', category: '肌力訓練', titleZh: '無尾熊靠牆坐', titleEn: 'wall sit', animal: '無尾熊', imageFile: 'B_9.png', emoji: '🐨', instruction: '雙腳與肩同寬並前站1-2步，下蹲至大腿與地面平行讓膝蓋呈90度。', safety: '背跟頭要貼緊牆壁，膝蓋不要超過腳尖。' },
       { id: 'B-10', team: 'blue', category: '肌力訓練', titleZh: '獵犬找獵物', titleEn: 'Bird-dog pose', animal: '獵犬', imageFile: 'B_10.png', emoji: '🐕', instruction: '四足跪姿，背部保持平坦，肚子收緊。緩慢同時將「右手」與「左腳」向前後延伸呈一直線，停留 3-5 秒，換邊進行。', safety: '骨盆與肩膀保持水平，避免身體左右搖晃或下背塌陷。' },
 
@@ -106,13 +110,14 @@
       return { minutesToday, daysThisWeek, history };
     };
 
-    const CombinedCard = ({ card, drawAnim = false }) => {
+    // 💡 新增 compact 屬性：為 true 時會隱藏「怎麼做」文字，節省垂直空間
+    const CombinedCard = ({ card, drawAnim = false, compact = false }) => {
       const [imgError, setImgError] = useState(false);
-      const [imgAttempt, setImgAttempt] = useState(0); // 0: 嘗試 image/ 目錄, 1: 嘗試根目錄
+      const [imgAttempt, setImgAttempt] = useState(0); 
 
       useEffect(() => {
         setImgError(false);
-        setImgAttempt(0); // 卡片變更時，重置嘗試次數
+        setImgAttempt(0); 
       }, [card?.id]);
 
       if (!card) return null;
@@ -123,7 +128,6 @@
       const borderClass = isRed ? 'border-red-700' : isBlue ? 'border-blue-600' : 'border-green-600';
       const textClass = isRed ? 'text-red-800' : isBlue ? 'text-blue-800' : 'text-green-800';
 
-      // 💡 修正路徑：對應 GitHub 上的 'image' 資料夾 (移除 's')
       const currentSrc = imgAttempt === 0 ? `./image/${card.imageFile}` : `./${card.imageFile}`;
 
       return (
@@ -133,23 +137,16 @@
             <i className="fa-solid fa-star text-yellow-300"></i>
           </div>
 
-          <div className="p-4 flex flex-col items-center bg-white border-b-2 border-gray-100">
-            {/* 💡 已將原本 aspect-[4/3] 修改為 aspect-[3/4] 直式比例，背景色改為純白 bg-white */}
-            <div className={`w-full aspect-[3/4] rounded-2xl border-4 border-dashed ${borderClass} bg-white mb-4 overflow-hidden relative flex flex-col items-center justify-center group`}>
+          <div className={`p-4 flex flex-col items-center bg-white ${compact ? '' : 'border-b-2 border-gray-100'}`}>
+            <div className={`w-full ${compact ? 'aspect-square' : 'aspect-[3/4]'} rounded-2xl border-4 border-dashed ${borderClass} bg-white mb-4 overflow-hidden relative flex flex-col items-center justify-center group transition-all duration-300`}>
               {!imgError ? (
                 <img 
                   src={currentSrc} 
                   alt={card.titleZh}
-                  // 💡 已移除 p-2 留白邊距，讓圖片完美撐滿
                   className="w-full h-full object-contain absolute inset-0 z-10"
                   onError={() => {
-                    if (imgAttempt === 0) {
-                      // 找不到 image/ 內的圖，改嘗試同層級根目錄
-                      setImgAttempt(1);
-                    } else {
-                      // 兩個地方都找不到，顯示錯誤佔位符
-                      setImgError(true);
-                    }
+                    if (imgAttempt === 0) setImgAttempt(1);
+                    else setImgError(true);
                   }}
                 />
               ) : (
@@ -164,21 +161,28 @@
             <h2 className={`text-3xl sm:text-4xl font-black mb-1 tracking-tighter ${textClass} text-center`}>
               {card.titleZh}
             </h2>
-            <h3 className="text-sm sm:text-lg font-bold text-gray-400 italic">
-              {card.titleEn}
-            </h3>
+            {/* 精簡模式下隱藏英文副標題 */}
+            {!compact && (
+              <h3 className="text-sm sm:text-lg font-bold text-gray-400 italic">
+                {card.titleEn}
+              </h3>
+            )}
           </div>
 
-          <div className="p-5 flex-1 bg-amber-50/20">
-            <div className="mb-6">
-              <div className={`flex items-center gap-2 mb-2 ${textClass}`}>
-                <i className="fa-solid fa-lightbulb text-xl opacity-80"></i>
-                <h4 className="text-xl font-black italic">怎麼做？</h4>
+          <div className={`p-5 flex-1 bg-amber-50/20 flex flex-col justify-end ${compact ? 'pt-0' : ''}`}>
+            
+            {/* 💡 運動中精簡模式：隱藏冗長的教學文字 */}
+            {!compact && (
+              <div className="mb-6">
+                <div className={`flex items-center gap-2 mb-2 ${textClass}`}>
+                  <i className="fa-solid fa-lightbulb text-xl opacity-80"></i>
+                  <h4 className="text-xl font-black italic">怎麼做？</h4>
+                </div>
+                <p className="text-gray-700 text-base sm:text-lg leading-relaxed font-bold pl-8">
+                  {card.instruction}
+                </p>
               </div>
-              <p className="text-gray-700 text-base sm:text-lg leading-relaxed font-bold pl-8">
-                {card.instruction}
-              </p>
-            </div>
+            )}
 
             <div className={`mt-auto bg-[#FFF7D6] border-2 ${borderClass} rounded-2xl p-4 flex gap-4 shadow-inner`}>
               <i className="fa-solid fa-triangle-exclamation text-2xl mt-1 flex-shrink-0"></i>
@@ -198,16 +202,23 @@
       const [activeTab, setActiveTab] = useState('challenge');
       const [filter, setFilter] = useState('all');
 
+      // 💡 新增：自訂牌組狀態 (存放被禁用的卡牌 ID)
+      const [disabledCardIds, setDisabledCardIds] = useState([]); 
+
       const [challengeMode, setChallengeMode] = useState(10); 
       const [isRunning, setIsRunning] = useState(false);
       const [timeLeft, setTimeLeft] = useState(30);
+      
+      // 💡 新增 phase: pool_selection (自訂牌組), briefing (行前預習)
       const [phase, setPhase] = useState('ready'); 
+      
       const [currentRound, setCurrentRound] = useState(1);
       const [currentIndex, setCurrentIndex] = useState(0);
       
       const [deck, setDeck] = useState([]);
       const [greenDeck, setGreenDeck] = useState([]);
       const [drawAnim, setDrawAnim] = useState(false);
+      const [briefingIndex, setBriefingIndex] = useState(0); // 行前說明當前預覽的卡牌
       
       const [encouragement, setEncouragement] = useState(null);
       const [restPrompt, setRestPrompt] = useState("");
@@ -227,9 +238,25 @@
         setStats({ minutesToday: updatedStats.minutesToday, daysThisWeek: updatedStats.daysThisWeek });
       };
 
+      const toggleCardDisable = (cardId) => {
+        setDisabledCardIds(prev => 
+          prev.includes(cardId) ? prev.filter(id => id !== cardId) : [...prev, cardId]
+        );
+      };
+
       const startChallenge = (mode) => {
-        const reds = cardData.filter(c => c.team === 'red').sort(() => Math.random() - 0.5).slice(0, 3);
-        const blues = cardData.filter(c => c.team === 'blue').sort(() => Math.random() - 0.5).slice(0, 3);
+        // 過濾掉被停用的卡牌
+        const availableReds = cardData.filter(c => c.team === 'red' && !disabledCardIds.includes(c.id));
+        const availableBlues = cardData.filter(c => c.team === 'blue' && !disabledCardIds.includes(c.id));
+        
+        // 防呆：如果禁用的卡牌太多，導致不夠抽
+        if (availableReds.length < 3 || availableBlues.length < 3) {
+           alert("您勾選取消的動作太多了！紅隊與藍隊至少需要保留 3 個動作才能開始挑戰喔！");
+           return;
+        }
+
+        const reds = availableReds.sort(() => Math.random() - 0.5).slice(0, 3);
+        const blues = availableBlues.sort(() => Math.random() - 0.5).slice(0, 3);
         const mixed = [];
         for(let i=0; i<3; i++) mixed.push(reds[i], blues[i]);
         
@@ -238,6 +265,15 @@
         setChallengeMode(mode);
         setDeck(mixed);
         setGreenDeck(greens);
+        
+        // 💡 改變流程：先進入「行前說明 (briefing)」而不是直接開始
+        setPhase('briefing');
+        setBriefingIndex(0);
+        setIsRunning(false);
+      };
+
+      // 💡 真正開始計時的函數 (從行前說明觸發)
+      const startTimerProcess = () => {
         setPhase('workout');
         setCurrentRound(1);
         setCurrentIndex(0);
@@ -303,7 +339,7 @@
         <div className="pb-20">
           
           {/* 🧪 測試快轉按鈕 */}
-          {activeTab === 'challenge' && isRunning && (
+          {activeTab === 'challenge' && isRunning && phase !== 'briefing' && (
             <div className="fixed bottom-6 right-6 z-50 animate-fade-in">
               <button 
                 onClick={() => setTimeLeft(3)}
@@ -336,6 +372,7 @@
               <div className="max-w-xl mx-auto animate-fade-in">
                 <div className="bg-white rounded-[2rem] shadow-2xl p-6 sm:p-12 border-8 border-amber-50 relative overflow-hidden">
                   
+                  {/* --- 階段 1：準備畫面 --- */}
                   {phase === 'ready' ? (
                     <div className="text-center py-4">
                       <div className="text-8xl mb-6 animate-bounce">🏕️</div>
@@ -358,6 +395,14 @@
                         </div>
                       </div>
 
+                      {/* 💡 新增：挑選動作牌組按鈕 */}
+                      <button 
+                        onClick={() => setPhase('pool_selection')}
+                        className="mb-6 bg-gray-100 hover:bg-gray-200 text-gray-600 font-bold py-3 px-6 rounded-xl border-2 border-gray-200 transition-colors w-full flex justify-center items-center gap-2"
+                      >
+                        <i className="fa-solid fa-gear"></i> 自訂牌組設定 (已排除 {disabledCardIds.length} 個動作)
+                      </button>
+
                       <p className="text-gray-500 font-bold mb-6 text-sm bg-gray-50 p-4 rounded-xl">
                         紅卡 (有氧) ↔ 藍卡 (肌力) 間歇訓練<br/>
                         (30秒運動 + 20秒休息)
@@ -372,6 +417,90 @@
                           <span>10 分鐘挑戰 (做兩輪)</span>
                           <i className="fa-solid fa-chevron-right opacity-70"></i>
                         </button>
+                      </div>
+                    </div>
+
+                  ) : phase === 'pool_selection' ? (
+                    /* --- 階段 1.5：自訂牌組畫面 --- */
+                    <div className="text-center py-4 animate-fade-in">
+                       <h2 className="text-3xl font-black text-amber-900 mb-2">自訂運動牌組</h2>
+                       <p className="text-gray-500 font-bold mb-6 text-sm">點擊按鈕來取消勾選不想出現的動作。<br/>(紅、藍隊最少需保留 3 個喔！)</p>
+                       
+                       <div className="h-[400px] overflow-y-auto mb-6 pr-2 rounded-xl text-left bg-gray-50 p-4 border-2 border-gray-100">
+                         {/* 紅隊 */}
+                         <h3 className="font-black text-red-700 mb-3 border-b-2 border-red-200 pb-2">🔴 選擇紅隊動作 (有氧)</h3>
+                         <div className="grid grid-cols-2 gap-2 mb-6">
+                           {cardData.filter(c => c.team === 'red').map(card => {
+                             const isOff = disabledCardIds.includes(card.id);
+                             return (
+                               <button 
+                                 key={card.id} 
+                                 onClick={() => toggleCardDisable(card.id)}
+                                 className={`p-2 rounded-lg text-sm font-bold flex items-center justify-between border-2 transition-all ${isOff ? 'bg-white border-gray-200 text-gray-400 opacity-60' : 'bg-red-50 border-red-300 text-red-800 shadow-sm'}`}
+                               >
+                                 <span className="truncate">{card.emoji} {card.titleZh}</span>
+                                 {isOff ? <i className="fa-solid fa-xmark text-gray-300"></i> : <i className="fa-solid fa-check text-red-500"></i>}
+                               </button>
+                             )
+                           })}
+                         </div>
+
+                         {/* 藍隊 */}
+                         <h3 className="font-black text-blue-700 mb-3 border-b-2 border-blue-200 pb-2">🔵 選擇藍隊動作 (肌力)</h3>
+                         <div className="grid grid-cols-2 gap-2">
+                           {cardData.filter(c => c.team === 'blue').map(card => {
+                             const isOff = disabledCardIds.includes(card.id);
+                             return (
+                               <button 
+                                 key={card.id} 
+                                 onClick={() => toggleCardDisable(card.id)}
+                                 className={`p-2 rounded-lg text-sm font-bold flex items-center justify-between border-2 transition-all ${isOff ? 'bg-white border-gray-200 text-gray-400 opacity-60' : 'bg-blue-50 border-blue-300 text-blue-800 shadow-sm'}`}
+                               >
+                                 <span className="truncate">{card.emoji} {card.titleZh}</span>
+                                 {isOff ? <i className="fa-solid fa-xmark text-gray-300"></i> : <i className="fa-solid fa-check text-blue-500"></i>}
+                               </button>
+                             )
+                           })}
+                         </div>
+                       </div>
+
+                       <button onClick={() => setPhase('ready')} className="bg-amber-900 text-white text-lg font-black px-6 py-4 rounded-2xl shadow-lg w-full">
+                          💾 儲存並返回
+                       </button>
+                    </div>
+
+                  ) : phase === 'briefing' ? (
+                    /* --- 階段 2：行前說明畫面 --- */
+                    <div className="text-center py-2 animate-fade-in flex flex-col h-[700px]">
+                      <h2 className="text-3xl font-black text-amber-900 mb-2">本日菜單預習</h2>
+                      <p className="text-gray-500 font-bold mb-4 text-sm">點擊動物頭像，看看稍後要做的 6 個動作吧！</p>
+                      
+                      {/* 上方預覽選擇器 */}
+                      <div className="flex justify-center gap-2 mb-6 w-full no-scrollbar px-2">
+                        {deck.map((card, idx) => (
+                           <button 
+                             key={idx}
+                             onClick={() => setBriefingIndex(idx)}
+                             className={`relative p-2 rounded-2xl text-4xl transition-all border-4 flex-shrink-0 ${briefingIndex === idx ? (card.team === 'red' ? 'bg-red-100 border-red-500 scale-110' : 'bg-blue-100 border-blue-500 scale-110') : 'bg-gray-50 border-transparent opacity-50 hover:opacity-100'}`}
+                           >
+                             {card.emoji}
+                             <div className="absolute -bottom-2 -right-2 bg-gray-800 text-white text-[10px] w-5 h-5 rounded-full flex items-center justify-center font-black">
+                               {idx + 1}
+                             </div>
+                           </button>
+                        ))}
+                      </div>
+
+                      {/* 顯示完整卡牌資訊 (非精簡模式) */}
+                      <div className="flex-1 overflow-y-auto mb-4 px-1 pb-4">
+                         <CombinedCard card={deck[briefingIndex]} compact={false} drawAnim={true} />
+                      </div>
+
+                      {/* 開始按鈕 */}
+                      <div className="pt-2 border-t-2 border-gray-100">
+                         <button onClick={startTimerProcess} className="bg-green-500 hover:bg-green-600 text-white text-xl font-black px-6 py-4 rounded-2xl shadow-xl transform transition hover:scale-105 active:scale-95 w-full flex justify-center items-center gap-2">
+                           <i className="fa-solid fa-check-circle"></i> 我看懂了，準備開始計時！
+                         </button>
                       </div>
                     </div>
 
@@ -422,6 +551,7 @@
                     </div>
 
                   ) : (
+                    /* --- 階段 3：運動中 / 休息 / 中場休息 --- */
                     <div className="flex flex-col items-center">
                       <div className="w-full flex justify-between items-center mb-6 bg-gray-50 p-3 sm:p-4 rounded-2xl">
                         <div className="flex items-center gap-2 sm:gap-3">
@@ -453,9 +583,10 @@
                         )}
                       </div>
 
-                      <div className="w-full min-h-[450px] sm:min-h-[500px] flex items-center justify-center relative">
+                      <div className="w-full flex items-center justify-center relative">
+                        {/* 💡 運動中：開啟 compact 模式隱藏文字 */}
                         {phase === 'workout' && (
-                          <CombinedCard card={deck[currentIndex]} drawAnim={drawAnim} />
+                          <CombinedCard card={deck[currentIndex]} drawAnim={drawAnim} compact={true} />
                         )}
 
                         {phase === 'rest' && (
@@ -502,7 +633,7 @@
                         )}
                       </div>
 
-                      <div className={`mt-8 px-10 py-3 sm:px-12 sm:py-4 rounded-3xl font-black text-lg sm:text-xl shadow-lg tracking-widest transition-colors 
+                      <div className={`mt-8 px-10 py-3 sm:px-12 sm:py-4 rounded-3xl font-black text-lg sm:text-xl shadow-lg tracking-widest transition-colors w-full text-center
                         ${phase === 'workout' ? 'bg-red-600 text-white' : phase === 'halftime' ? 'bg-green-600 text-white' : 'bg-blue-600 text-white'}`}
                       >
                         {phase === 'workout' ? '🔥 運動中！' : phase === 'halftime' ? '🛋️ 中場休息' : '💤 休息中'}
@@ -530,8 +661,9 @@
                   ))}
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10">
+                  {/* 圖鑑模式下，compact 設為 false，顯示全部教學文字 */}
                   {cardData.filter(c => filter === 'all' || c.team === filter).map(card => (
-                    <CombinedCard key={card.id} card={card} />
+                    <CombinedCard key={card.id} card={card} compact={false} />
                   ))}
                 </div>
               </div>
