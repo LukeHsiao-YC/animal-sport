@@ -1,0 +1,534 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>動物運動森友會卡牌</title>
+  
+  <!-- 引入 Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  
+  <!-- 引入 FontAwesome 圖示庫 -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  
+  <!-- 引入 React 與 ReactDOM -->
+  <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+  <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+  
+  <!-- 引入 Babel 以在瀏覽器編譯 JSX -->
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+
+  <style>
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    @keyframes cardDraw {
+      0% { opacity: 0; transform: scale(0.6) translateY(300px) rotate(-20deg); }
+      60% { opacity: 1; transform: scale(1.05) translateY(-20px) rotate(5deg); }
+      100% { opacity: 1; transform: scale(1) translateY(0) rotate(0); }
+    }
+    .animate-fade-in { animation: fadeIn 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+    .animate-card-draw { animation: cardDraw 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards; }
+  </style>
+</head>
+<body class="bg-[#FFFDF9] font-sans text-gray-800">
+
+  <!-- React 應用程式掛載點 -->
+  <div id="root"></div>
+
+  <!-- React 核心程式碼 -->
+  <script type="text/babel">
+    const { useState, useEffect } = React;
+
+    // --- 資料庫同步 ---
+    const cardData = [
+      // 🔴 紅隊：有氧運動
+      { id: 'R-01', team: 'red', category: '有氧運動', titleZh: '海星點點腳', titleEn: 'Step jacks', animal: '兔子', imageFile: 'R_1.png', emoji: '🐰', instruction: '身體站直，雙腳併攏，挺胸收肚子，接下來向右側跨出一大步後右腳著地，左腳隨即跟上併攏，雙臂自然擺動或隨節奏舉起，接著換左側重複，過程膝蓋微彎保持核心收緊。', safety: '保持呼吸，手臂舉過頭頂，背要打直。' },
+      { id: 'R-02', team: 'red', category: '有氧運動', titleZh: '巨人踏步走', titleEn: 'High knee walk', animal: '小狗', imageFile: 'R_2.png', emoji: '🐶', instruction: '起始站立，收緊核心，向前邁步並將一側膝蓋儘量抬高至腰部，同時手臂交替擺動，保持上半身直立、不駝背，持續交替雙腿行進。', safety: '身體不要東倒西歪，保持平衡。' },
+      { id: 'R-03', team: 'red', category: '有氧運動', titleZh: '閃電拳擊手', titleEn: 'Shadow Boxing', animal: '松鼠', imageFile: 'R_3.png', emoji: '🐿️', instruction: '向前方揮出閃電拳頭，左右輪流快快出擊！', safety: '出拳不要太用力，手肘要留一點空間。' },
+      { id: 'R-04', team: 'red', category: '有氧運動', titleZh: '腳跟踢屁股', titleEn: 'Standing Butt Kicks', animal: '狐狸', imageFile: 'R_4.png', emoji: '🦊', instruction: '右腳跟向後踢向臀部，放下後，立即換左腳，交替進行。可配合手臂擺動來加快節奏。嘗試小跑步姿態做踢臀，增加有氧強度。', safety: '動作輕柔，不要踢痛自己，保持平衡。' },
+      { id: 'R-05', team: 'red', category: '有氧運動', titleZh: '站立捲腹', titleEn: 'Standing Crunch', animal: '水獺', imageFile: 'R_5.png', emoji: '🦦', instruction: '雙腳打開與肩同寬站立，膝蓋微彎保持彈性。雙手輕輕放在耳旁或後腦，手肘向外打開，右膝向右側抬起，上半身同時向右側彎，右手肘去靠近右膝，左右交替。', safety: '身體輕輕扭轉，動作不要太快。' },
+      { id: 'R-06', team: 'red', category: '有氧運動', titleZh: '企鵝側抬腿', titleEn: 'Standing Side Leg Raise', animal: '企鵝', imageFile: 'R_6.png', emoji: '🐧', instruction: '挺胸收小腹、雙腳站穩，開始時另一隻腳向側邊穩定抬起，保持上半身不晃動，並控制緩慢放下。左右交替。', safety: '支撐的那隻腳要踩穩。身體保值正直，不要跟著腳一起歪。' },
+      { id: 'R-07', team: 'red', category: '有氧運動', titleZh: '袋鼠高抬腿', titleEn: 'High knees', animal: '袋鼠', imageFile: 'R_7.png', emoji: '🦘', instruction: '站直且雙腳與臀同寬，快速提起右膝至胸部或髖部高度再迅速放下右腳，雙腳快速交替，可配合手臂擺動。', safety: '背要打直，輕輕落地。' },
+      { id: 'R-08', team: 'red', category: '有氧運動', titleZh: '獵豹原地跑', titleEn: 'Jog in place', animal: '獵豹', imageFile: 'R_8.png', emoji: '🐆', instruction: '維持核心收緊，在原地踏步或慢跑，膝蓋微彎以緩衝衝擊，搭配雙手自然擺動。', safety: '身體要打直，原地跑步。' },
+      { id: 'R-09', team: 'red', category: '有氧運動', titleZh: '小熊爬', titleEn: 'Bear crawl', animal: '小熊', imageFile: 'R_9.png', emoji: '🐻', instruction: '四足跪姿、膝蓋離地3-5公分、對側手腳交替向前/後移動，需保持背部平直、臀部不晃動、視線看斜前方。', safety: '手掌要張開撐穩，肚子收緊。' },
+      { id: 'R-10', team: 'red', category: '有氧運動', titleZh: '大象踏步走', titleEn: 'Elephant March', animal: '大象', imageFile: 'R_10.png', emoji: '🐘', instruction: '1. 起始姿勢：雙腳與臀同寬，身體前彎，雙手置於前方地板上，使身體呈倒「V」字型。 2. 動作執行：收緊腹部，單腳膝蓋伸直，另一腳彎曲，輪流交替模擬步伐。', safety: '動作要有力但不要震壞地板。' },
+
+      // 🔵 藍隊：肌力訓練
+      { id: 'B-01', team: 'blue', category: '肌力訓練', titleZh: '大猩猩蹲蹲', titleEn: 'squats', animal: '大猩猩', imageFile: 'B_1.png', emoji: '🦍', instruction: '雙腳打開與肩膀同寬，屁股往後座，就像要坐椅子一樣，背盡量打直。', safety: '膝蓋不要超過腳尖，重心放在腳跟，慢慢下蹲在站起來。' },
+      { id: 'B-02', team: 'blue', category: '肌力訓練', titleZh: '長頸鹿弓步蹲', titleEn: 'lunges', animal: '長頸鹿', imageFile: 'B_2.png', emoji: '🦒', instruction: '挺胸站立，邁出一腳並雙膝下蹲至約 90 度，前膝不超過腳尖，後膝靠近地面，重心置於前腳，核心收緊保持垂直上下。', safety: '前腳膝蓋不要超過腳尖，後腳膝蓋不要撞到地板。保持平衡慢慢做。' },
+      { id: 'B-03', team: 'blue', category: '肌力訓練', titleZh: '紅鶴踮腳尖', titleEn: 'calf raise', animal: '紅鶴', imageFile: 'B_3.png', emoji: '🦩', instruction: '雙腳與肩同寬站立，腳尖朝前，緩慢踮起腳跟，用前腳掌支撐，盡量抬高，停頓 1-2 秒，感受小腿肌肉繃緊，緩慢降下腳跟，回到起始位置。', safety: '身體站直，可以扶牆壁或椅子保持平衡。' },
+      { id: 'B-04', team: 'blue', category: '肌力訓練', titleZh: '壁虎伏牆挺身', titleEn: 'wall push', animal: '壁虎', imageFile: 'B_4.png', emoji: '🦎', instruction: '站立於牆前約一步距離，雙手撐牆與肩同寬，身體保持直線前傾45度，彎肘讓胸口靠近牆面，呼氣發力推回至起始位置。', safety: '推的時候身體保持一直線，肚子收緊，背不要凹下去或拱起。' },
+      { id: 'B-05', team: 'blue', category: '肌力訓練', titleZh: '貓頭鷹轉圈', titleEn: 'arm circle', animal: '貓頭鷹', imageFile: 'B_5.png', emoji: '🦉', instruction: '腳與肩同寬站立，挺胸，手臂向兩側平舉成一直線，先正向畫小圈五次，再逆向畫小圈重複。', safety: '雙肩放輕鬆，不要聳肩，畫圈時手臂保持伸直。' },
+      { id: 'B-06', team: 'blue', category: '肌力訓練', titleZh: '螃蟹搭拱橋', titleEn: 'Bridge', animal: '螃蟹', imageFile: 'B_6.png', emoji: '🦀', instruction: '仰躺屈膝，腳掌踩地，以臀部發力抬起骨盆，使肩膀至膝蓋呈一直線，最高點夾緊臀部停五秒，緩慢下放，避免下背代償拱起。', safety: '肚子要收緊，不要拱背。' },
+      { id: 'B-07', team: 'blue', category: '肌力訓練', titleZh: '鱷魚1支撐', titleEn: 'plank', animal: '鱷魚', imageFile: 'B_7.png', emoji: '🐊', instruction: '手肘在肩膀正下方，前臂與地面平行，從頭、肩膀、臀部到腳跟呈一直線，腹部與臀部收緊。', safety: '背要呈現一直線，不可以凹下去或凸起來，眼睛看地板，不要憋氣。' },
+      { id: 'B-08', team: 'blue', category: '肌力訓練', titleZh: '甲蟲翻肚皮', titleEn: 'Dead bug', animal: '甲蟲', imageFile: 'B_8.png', emoji: '🪲', instruction: '平躺，起始位置雙手舉高與身體垂直，雙腳屈膝舉起呈90度。吐氣時，左腳往下方延伸腳跟不碰地，同時右手向後伸直，回到起始位置，再換邊。', safety: '動作越慢越好，背貼緊地板。' },
+      { id: 'B-09', team: 'blue', category: '肌力訓練', titleZh: '無尾熊靠牆坐', titleEn: 'wall sit', animal: '無尾熊', imageFile: 'B_9.png', emoji: '🐨', instruction: '雙腳與肩同寬並前站1-2步，下蹲至大腿與地面平行讓膝蓋呈90度。', safety: '背跟頭要貼緊牆壁，膝蓋不要超過腳尖。' },
+      { id: 'B-10', team: 'blue', category: '肌力訓練', titleZh: '獵犬找獵物', titleEn: 'Bird-dog pose', animal: '獵犬', imageFile: 'B_10.png', emoji: '🐕', instruction: '四足跪姿，背部保持平坦，肚子收緊。緩慢同時將「右手」與「左腳」向前後延伸呈一直線，停留 3-5 秒，換邊進行。', safety: '骨盆與肩膀保持水平，避免身體左右搖晃或下背塌陷。' },
+
+      // 🟢 綠隊：伸展與平衡
+      { id: 'G-01', team: 'green', category: '伸展平衡', titleZh: '長頸鹿吃樹葉', titleEn: 'Neck Stretch', animal: '長頸鹿', imageFile: 'G_1.png', emoji: '🦒', instruction: '脖子慢慢往左邊、右邊看，拉長你的脖子。', safety: '動作要非常慢，不要太用力。' },
+      { id: 'G-02', team: 'green', category: '伸展平衡', titleZh: '大象甩鼻子', titleEn: 'Trunk Swings', animal: '大象', imageFile: 'G_2.png', emoji: '🐘', instruction: '身體往前彎，手臂像象鼻一樣輕鬆擺動。', safety: '膝蓋可以微彎，不要太僵硬。' },
+      { id: 'G-03', team: 'green', category: '伸展平衡', titleZh: '蝴蝶飛呀飛', titleEn: 'Butterfly Stretch', animal: '蝴蝶', imageFile: 'G_3.png', emoji: '🦋', instruction: '坐著腳對腳，輕拍動雙腿像蝴蝶翅膀。', safety: '輕輕晃動就好，不需要用力壓。' },
+      { id: 'G-04', team: 'green', category: '伸展平衡', titleZh: '樹懶掛樹上', titleEn: 'Back Stretch', animal: '樹懶', imageFile: 'G_4.png', emoji: '🦥', instruction: '雙手互抱，身體慢慢往前彎，放鬆背部。', safety: '感受背部拉開的感覺，深呼吸。' },
+      { id: 'G-05', team: 'green', category: '伸展平衡', titleZh: '金雞獨立', titleEn: 'Balance Stand', animal: '公雞', imageFile: 'G_5.png', emoji: '🐓', instruction: '單腳站立，雙手像翅膀一樣幫助平衡。', safety: '眼睛可以盯住一個點，站得更穩。' }
+    ];
+
+    const encouragementMessages = [
+      "太棒了！✨", "繼續保持！💪", "你做得很好！🌟", 
+      "加油加油！🔥", "超厲害！🏆", "姿勢很標準喔！👏",
+      "像動物一樣充滿活力！🦁", "再撐一下下！⏰"
+    ];
+
+    const activeRecoveryPrompts = [
+      "雙手叉腰，鼻子吸氣、嘴巴吐氣～",
+      "在原地慢慢走動，調整呼吸！",
+      "輕輕抖一抖手和腳，放鬆一下！",
+      "吸氣肚子變大，吐氣肚子變小～",
+      "肩膀輕輕轉一轉，準備迎接下一關！"
+    ];
+
+    const getStats = () => {
+      const saved = localStorage.getItem('animalFitnessHistory_v2');
+      const history = saved ? JSON.parse(saved) : {};
+      const today = new Date().toLocaleDateString('en-CA');
+      const minutesToday = history[today] || 0;
+
+      let daysThisWeek = 0;
+      const now = new Date();
+      for (let i = 0; i < 7; i++) {
+        const d = new Date(now);
+        d.setDate(d.getDate() - i);
+        const dateStr = d.toLocaleDateString('en-CA');
+        if (history[dateStr] > 0) daysThisWeek++;
+      }
+      return { minutesToday, daysThisWeek, history };
+    };
+
+    const CombinedCard = ({ card, drawAnim = false }) => {
+      const [imgError, setImgError] = useState(false);
+
+      useEffect(() => {
+        setImgError(false);
+      }, [card?.id]);
+
+      if (!card) return null;
+
+      const isRed = card.team === 'red';
+      const isBlue = card.team === 'blue';
+      const colorClass = isRed ? 'bg-red-700' : isBlue ? 'bg-blue-600' : 'bg-green-600';
+      const borderClass = isRed ? 'border-red-700' : isBlue ? 'border-blue-600' : 'border-green-600';
+      const textClass = isRed ? 'text-red-800' : isBlue ? 'text-blue-800' : 'text-green-800';
+
+      return (
+        <div className={`w-full max-w-sm mx-auto bg-white rounded-3xl shadow-xl border-4 ${borderClass} overflow-hidden flex flex-col ${drawAnim ? 'animate-card-draw' : ''}`}>
+          <div className={`${colorClass} text-white px-4 py-3 flex justify-between items-center`}>
+            <span className="font-black tracking-widest text-base sm:text-lg">{card.category}・初階 Lv.1</span>
+            <i className="fa-solid fa-star text-yellow-300"></i>
+          </div>
+
+          <div className="p-4 flex flex-col items-center bg-white border-b-2 border-gray-100">
+            <div className={`w-full aspect-[4/3] rounded-2xl border-4 border-dashed ${borderClass} bg-gray-50 mb-4 overflow-hidden relative flex flex-col items-center justify-center group`}>
+              {!imgError ? (
+                <img 
+                  src={`images/${card.imageFile}`} 
+                  alt={card.titleZh}
+                  className="w-full h-full object-contain absolute inset-0 p-2 z-10"
+                  onError={() => setImgError(true)}
+                />
+              ) : (
+                <div className="flex flex-col items-center justify-center text-gray-400 w-full h-full bg-gray-100">
+                   <i className="fa-solid fa-image text-4xl mb-2 opacity-50"></i>
+                   <span className="text-7xl mb-2">{card.emoji}</span>
+                   <span className="text-xs font-bold uppercase tracking-widest bg-gray-200 px-3 py-1 rounded-full mt-2">圖片 ({card.imageFile})</span>
+                </div>
+              )}
+            </div>
+            
+            <h2 className={`text-3xl sm:text-4xl font-black mb-1 tracking-tighter ${textClass} text-center`}>
+              {card.titleZh}
+            </h2>
+            <h3 className="text-sm sm:text-lg font-bold text-gray-400 italic">
+              {card.titleEn}
+            </h3>
+          </div>
+
+          <div className="p-5 flex-1 bg-amber-50/20">
+            <div className="mb-6">
+              <div className={`flex items-center gap-2 mb-2 ${textClass}`}>
+                <i className="fa-solid fa-lightbulb text-xl opacity-80"></i>
+                <h4 className="text-xl font-black italic">怎麼做？</h4>
+              </div>
+              <p className="text-gray-700 text-base sm:text-lg leading-relaxed font-bold pl-8">
+                {card.instruction}
+              </p>
+            </div>
+
+            <div className={`mt-auto bg-[#FFF7D6] border-2 ${borderClass} rounded-2xl p-4 flex gap-4 shadow-inner`}>
+              <i className="fa-solid fa-triangle-exclamation text-2xl mt-1 flex-shrink-0"></i>
+              <div>
+                <h4 className={`font-black ${textClass} mb-1 text-sm`}>安全小叮嚀：</h4>
+                <p className={`text-xs sm:text-sm ${textClass} font-bold leading-normal`}>
+                  {card.safety}
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      );
+    };
+
+    function App() {
+      const [activeTab, setActiveTab] = useState('challenge');
+      const [filter, setFilter] = useState('all');
+
+      const [challengeMode, setChallengeMode] = useState(10); 
+      const [isRunning, setIsRunning] = useState(false);
+      const [timeLeft, setTimeLeft] = useState(30);
+      const [phase, setPhase] = useState('ready'); 
+      const [currentRound, setCurrentRound] = useState(1);
+      const [currentIndex, setCurrentIndex] = useState(0);
+      
+      const [deck, setDeck] = useState([]);
+      const [greenDeck, setGreenDeck] = useState([]);
+      const [drawAnim, setDrawAnim] = useState(false);
+      
+      const [encouragement, setEncouragement] = useState(null);
+      const [restPrompt, setRestPrompt] = useState("");
+      const [stats, setStats] = useState({ minutesToday: 0, daysThisWeek: 0 });
+
+      useEffect(() => {
+        const currentStats = getStats();
+        setStats({ minutesToday: currentStats.minutesToday, daysThisWeek: currentStats.daysThisWeek });
+      }, [activeTab]);
+
+      const saveWorkoutRecord = (minutes) => {
+        const history = getStats().history;
+        const today = new Date().toLocaleDateString('en-CA');
+        history[today] = (history[today] || 0) + minutes;
+        localStorage.setItem('animalFitnessHistory_v2', JSON.stringify(history));
+        const updatedStats = getStats();
+        setStats({ minutesToday: updatedStats.minutesToday, daysThisWeek: updatedStats.daysThisWeek });
+      };
+
+      const startChallenge = (mode) => {
+        const reds = cardData.filter(c => c.team === 'red').sort(() => Math.random() - 0.5).slice(0, 3);
+        const blues = cardData.filter(c => c.team === 'blue').sort(() => Math.random() - 0.5).slice(0, 3);
+        const mixed = [];
+        for(let i=0; i<3; i++) mixed.push(reds[i], blues[i]);
+        
+        const greens = cardData.filter(c => c.team === 'green').sort(() => Math.random() - 0.5).slice(0, 3);
+        
+        setChallengeMode(mode);
+        setDeck(mixed);
+        setGreenDeck(greens);
+        setPhase('workout');
+        setCurrentRound(1);
+        setCurrentIndex(0);
+        setTimeLeft(30);
+        setIsRunning(true);
+        setEncouragement(null);
+        triggerDraw();
+      };
+
+      const triggerDraw = () => {
+        setDrawAnim(false);
+        setTimeout(() => setDrawAnim(true), 50);
+      };
+
+      useEffect(() => {
+        let timer;
+        if (isRunning && timeLeft > 0) {
+          timer = setInterval(() => {
+            setTimeLeft(p => {
+              const newTime = p - 1;
+              if (phase === 'workout' && (newTime === 20 || newTime === 10)) {
+                setEncouragement(encouragementMessages[Math.floor(Math.random() * encouragementMessages.length)]);
+                setTimeout(() => setEncouragement(null), 3000);
+              }
+              return newTime;
+            });
+          }, 1000);
+        } else if (isRunning && timeLeft === 0) {
+          setEncouragement(null);
+          
+          if (phase === 'workout') {
+            if (currentIndex === 5) {
+              if (challengeMode === 10 && currentRound === 1) {
+                setPhase('halftime');
+                setTimeLeft(60);
+              } else {
+                setPhase('complete');
+                setIsRunning(false);
+                saveWorkoutRecord(challengeMode); 
+              }
+            } else {
+              setPhase('rest');
+              setTimeLeft(20);
+              setRestPrompt(activeRecoveryPrompts[Math.floor(Math.random() * activeRecoveryPrompts.length)]);
+            }
+          } else if (phase === 'rest') {
+            setPhase('workout');
+            setCurrentIndex(i => i + 1);
+            setTimeLeft(30);
+            triggerDraw();
+          } else if (phase === 'halftime') {
+            setPhase('workout');
+            setCurrentRound(2);
+            setCurrentIndex(0);
+            setTimeLeft(30);
+            triggerDraw();
+          }
+        }
+        return () => clearInterval(timer);
+      }, [isRunning, timeLeft, phase, currentRound, currentIndex, challengeMode]);
+
+      return (
+        <div className="pb-20">
+          
+          {/* 🧪 測試快轉按鈕 */}
+          {activeTab === 'challenge' && isRunning && (
+            <div className="fixed bottom-6 right-6 z-50 animate-fade-in">
+              <button 
+                onClick={() => setTimeLeft(3)}
+                className="bg-gray-800/80 hover:bg-black text-white text-xs sm:text-sm font-bold px-4 py-2 rounded-full shadow-xl border-2 border-gray-600 backdrop-blur-sm transition flex items-center gap-2"
+              >
+                🧪 測試: 跳至剩 3 秒
+              </button>
+            </div>
+          )}
+
+          <header className="bg-white border-b-4 border-amber-100 sticky top-0 z-30 shadow-sm">
+            <div className="max-w-5xl mx-auto px-4 py-4 flex flex-col sm:flex-row justify-between items-center gap-4">
+              <div className="flex items-center gap-3">
+                <div className="bg-amber-400 p-2 rounded-xl shadow-sm">
+                  <i className="fa-solid fa-wand-magic-sparkles text-white text-xl"></i>
+                </div>
+                <h1 className="text-2xl font-black text-amber-900 tracking-tighter">動物運動森友會</h1>
+              </div>
+              <div className="flex bg-gray-100 p-1.5 rounded-2xl">
+                <button onClick={() => { setActiveTab('challenge'); setIsRunning(false); setPhase('ready'); }} className={`px-6 py-2 rounded-xl font-black transition-all ${activeTab === 'challenge' ? 'bg-amber-500 text-white shadow-md' : 'text-gray-400'}`}>挑戰模式</button>
+                <button onClick={() => setActiveTab('gallery')} className={`px-6 py-2 rounded-xl font-black transition-all ${activeTab === 'gallery' ? 'bg-white text-amber-800 shadow-md' : 'text-gray-400'}`}>卡牌圖鑑</button>
+              </div>
+            </div>
+          </header>
+
+          <main className="max-w-6xl mx-auto px-4 py-8">
+            
+            {/* --- 挑戰模式 --- */}
+            {activeTab === 'challenge' && (
+              <div className="max-w-xl mx-auto animate-fade-in">
+                <div className="bg-white rounded-[2rem] shadow-2xl p-6 sm:p-12 border-8 border-amber-50 relative overflow-hidden">
+                  
+                  {phase === 'ready' ? (
+                    <div className="text-center py-4">
+                      <div className="text-8xl mb-6 animate-bounce">🏕️</div>
+                      <h2 className="text-4xl font-black text-amber-900 mb-4 tracking-tight">選擇今天的任務！</h2>
+                      
+                      <div className="flex justify-center gap-4 mb-8">
+                        <div className="bg-amber-50 px-4 py-3 rounded-2xl flex items-center gap-3 border border-amber-100 flex-1 justify-center">
+                           <i className="fa-solid fa-chart-line text-amber-500 text-2xl"></i>
+                           <div className="text-left">
+                             <div className="text-[10px] font-bold text-gray-400">今日運動時長</div>
+                             <div className="text-base font-black text-amber-900">{stats.minutesToday} 分鐘</div>
+                           </div>
+                        </div>
+                        <div className="bg-blue-50 px-4 py-3 rounded-2xl flex items-center gap-3 border border-blue-100 flex-1 justify-center">
+                           <i className="fa-regular fa-calendar text-blue-500 text-2xl"></i>
+                           <div className="text-left">
+                             <div className="text-[10px] font-bold text-gray-400">本週運動天數</div>
+                             <div className="text-base font-black text-blue-900">{stats.daysThisWeek} 天</div>
+                           </div>
+                        </div>
+                      </div>
+
+                      <p className="text-gray-500 font-bold mb-6 text-sm bg-gray-50 p-4 rounded-xl">
+                        紅卡 (有氧) ↔ 藍卡 (肌力) 間歇訓練<br/>
+                        (30秒運動 + 20秒休息)
+                      </p>
+                      
+                      <div className="flex flex-col gap-4">
+                        <button onClick={() => startChallenge(5)} className="bg-indigo-500 hover:bg-indigo-600 text-white text-xl font-black px-6 py-4 rounded-2xl shadow-lg transform transition hover:scale-105 active:scale-95 w-full flex justify-between items-center">
+                          <span>5 分鐘挑戰 (做一輪)</span>
+                          <i className="fa-solid fa-chevron-right opacity-70"></i>
+                        </button>
+                        <button onClick={() => startChallenge(10)} className="bg-green-500 hover:bg-green-600 text-white text-xl font-black px-6 py-4 rounded-2xl shadow-lg transform transition hover:scale-105 active:scale-95 w-full flex justify-between items-center">
+                          <span>10 分鐘挑戰 (做兩輪)</span>
+                          <i className="fa-solid fa-chevron-right opacity-70"></i>
+                        </button>
+                      </div>
+                    </div>
+
+                  ) : phase === 'complete' ? (
+                    <div className="text-center py-4 animate-fade-in">
+                      <div className="w-24 h-24 bg-yellow-100 rounded-full flex items-center justify-center mx-auto mb-4 shadow-inner">
+                        <i className="fa-solid fa-trophy text-yellow-500 text-4xl"></i>
+                      </div>
+                      <h2 className="text-3xl font-black text-amber-900 mb-1">本次訓練總結</h2>
+                      <p className="text-gray-500 font-bold mb-6 text-sm">你完成了 {challengeMode} 分鐘的挑戰，流了好多汗，超棒的！</p>
+                      
+                      <div className="bg-gray-50 rounded-2xl p-4 mb-6 border-2 border-gray-100">
+                        <h3 className="text-sm font-black text-gray-600 mb-3 flex items-center justify-center gap-2">
+                          <i className="fa-solid fa-circle-check text-green-500"></i>
+                          剛剛完成的動物任務
+                        </h3>
+                        <div className="grid grid-cols-3 gap-2">
+                          {deck.map((card, idx) => (
+                            <div key={idx} className={`rounded-xl p-2 text-center border-2 ${card.team === 'red' ? 'border-red-100 bg-red-50' : 'border-blue-100 bg-blue-50'}`}>
+                              <div className="text-3xl mb-1">{card.emoji}</div>
+                              <div className="text-[10px] font-black text-gray-700 leading-tight">{card.titleZh}</div>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+
+                      <div className="bg-green-50 rounded-2xl p-4 mb-8 border-2 border-green-200 shadow-sm relative overflow-hidden">
+                        <div className="absolute -right-4 -top-4 opacity-10">
+                          <i className="fa-solid fa-heart text-green-500 text-8xl"></i>
+                        </div>
+                        <h3 className="text-sm font-black text-green-800 mb-3 flex items-center justify-center gap-2 relative z-10">
+                          🟢 訓練結束！跟著做靜態伸展
+                        </h3>
+                        <div className="flex justify-center gap-3 relative z-10">
+                          {greenDeck.slice(1, 3).map((gCard, idx) => (
+                             <div key={idx} className="bg-white px-3 py-2 rounded-xl flex items-center gap-2 shadow-sm border border-green-100">
+                                <span className="text-2xl">{gCard.emoji}</span>
+                                <span className="text-xs font-bold text-green-900">{gCard.titleZh}</span>
+                             </div>
+                          ))}
+                        </div>
+                        <p className="text-[10px] text-green-600 font-bold mt-3">每個動作慢慢呼吸，停留 20~40 秒喔！</p>
+                      </div>
+
+                      <button onClick={() => setPhase('ready')} className="bg-amber-900 text-white font-black px-12 py-4 rounded-2xl shadow hover:bg-black w-full">
+                        回主畫面
+                      </button>
+                    </div>
+
+                  ) : (
+                    <div className="flex flex-col items-center">
+                      <div className="w-full flex justify-between items-center mb-6 bg-gray-50 p-3 sm:p-4 rounded-2xl">
+                        <div className="flex items-center gap-2 sm:gap-3">
+                          <div className="bg-gray-800 text-white text-xs font-bold px-2 py-1 rounded-md">
+                            {challengeMode === 10 ? `第 ${currentRound} 輪` : '5分鐘挑戰'}
+                          </div>
+                          <div className="font-black text-gray-500 text-sm">
+                            {phase === 'halftime' ? '中場休息' : `動作 ${currentIndex + 1} / 6`}
+                          </div>
+                        </div>
+                        <div className="flex gap-2">
+                          <button onClick={() => setIsRunning(!isRunning)} className="w-10 h-10 bg-white rounded-xl shadow-sm border border-gray-100 flex items-center justify-center">
+                            {isRunning ? <i className="fa-solid fa-pause text-gray-600"></i> : <i className="fa-solid fa-play text-gray-600"></i>}
+                          </button>
+                          <button onClick={() => { setIsRunning(false); setPhase('ready'); }} className="w-10 h-10 bg-white rounded-xl shadow-sm border border-gray-100 flex items-center justify-center">
+                            <i className="fa-solid fa-rotate-left text-gray-600"></i>
+                          </button>
+                        </div>
+                      </div>
+
+                      <div className={`text-7xl sm:text-8xl font-black tabular-nums mb-6 relative 
+                        ${phase === 'workout' ? 'text-red-600' : phase === 'halftime' ? 'text-green-500' : 'text-blue-500'}`}
+                      >
+                        {timeLeft}<span className="text-2xl sm:text-3xl ml-1 sm:ml-2 font-black italic">s</span>
+                        {encouragement && (
+                           <div className="absolute -top-6 -right-16 sm:-right-24 bg-yellow-400 text-amber-900 text-base sm:text-lg font-black px-4 py-2 rounded-2xl rounded-bl-none shadow-lg animate-bounce z-20 whitespace-nowrap border-2 border-white">
+                             {encouragement}
+                           </div>
+                        )}
+                      </div>
+
+                      <div className="w-full min-h-[450px] sm:min-h-[500px] flex items-center justify-center relative">
+                        {phase === 'workout' && (
+                          <CombinedCard card={deck[currentIndex]} drawAnim={drawAnim} />
+                        )}
+
+                        {phase === 'rest' && (
+                          <div className="bg-blue-50 border-4 border-dashed border-blue-200 rounded-[2.5rem] p-6 sm:p-10 text-center w-full animate-fade-in flex flex-col items-center justify-center">
+                            <span className="text-6xl sm:text-7xl mb-4">🥤</span>
+                            <h3 className="text-2xl sm:text-3xl font-black text-blue-800 mb-2">休息 20 秒</h3>
+                            <div className="bg-blue-100 text-blue-800 font-bold px-4 py-2 rounded-xl text-sm sm:text-base mb-6">
+                              💡 {restPrompt}
+                            </div>
+                            <div className="mt-2 bg-white/80 p-5 sm:p-6 rounded-[2rem] w-full shadow-sm">
+                              <p className="text-xs font-black text-gray-400 mb-3 tracking-widest uppercase italic text-center">準備下一個</p>
+                              <div className="flex items-center justify-center gap-3">
+                                <span className="text-4xl sm:text-5xl">{deck[currentIndex + 1]?.emoji}</span>
+                                <div className="text-left">
+                                  <p className="text-xl sm:text-2xl font-black text-gray-800 leading-none">{deck[currentIndex + 1]?.titleZh}</p>
+                                  <p className="text-[10px] sm:text-xs font-bold text-gray-400 uppercase tracking-tighter mt-1">{deck[currentIndex + 1]?.animal}</p>
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                        )}
+
+                        {phase === 'halftime' && timeLeft > 30 && (
+                          <div className="bg-green-50 border-4 border-dashed border-green-200 rounded-[2.5rem] p-6 sm:p-10 text-center w-full animate-fade-in flex flex-col items-center justify-center">
+                            <span className="text-6xl sm:text-7xl mb-4">⏱️</span>
+                            <h3 className="text-2xl sm:text-3xl font-black text-green-800 mb-3">中場大休息</h3>
+                            <p className="text-green-600 font-bold mb-6 text-sm sm:text-base">先擦擦汗、喝口水！</p>
+                            <div className="bg-white/60 p-4 rounded-xl text-sm font-bold text-green-700">
+                              稍後會帶你做一個簡單的伸展過渡喔！
+                            </div>
+                          </div>
+                        )}
+
+                        {phase === 'halftime' && timeLeft <= 30 && (
+                          <div className="bg-green-100 border-4 border-green-300 rounded-[2.5rem] p-6 text-center w-full animate-fade-in flex flex-col items-center justify-center relative overflow-hidden">
+                            <div className="absolute top-0 inset-x-0 bg-green-500 text-white text-xs font-black py-1 uppercase tracking-widest">Active Recovery</div>
+                            <span className="text-6xl sm:text-7xl mb-2 mt-4">{greenDeck[0]?.emoji}</span>
+                            <h3 className="text-xl sm:text-2xl font-black text-green-800 mb-1">{greenDeck[0]?.titleZh}</h3>
+                            <p className="text-green-700 font-bold text-sm mb-4">跟著做做看，緩和一下呼吸！</p>
+                            <div className="bg-white p-4 rounded-2xl shadow-inner w-full text-left text-sm font-bold text-gray-700 leading-relaxed">
+                              {greenDeck[0]?.instruction}
+                            </div>
+                          </div>
+                        )}
+                      </div>
+
+                      <div className={`mt-8 px-10 py-3 sm:px-12 sm:py-4 rounded-3xl font-black text-lg sm:text-xl shadow-lg tracking-widest transition-colors 
+                        ${phase === 'workout' ? 'bg-red-600 text-white' : phase === 'halftime' ? 'bg-green-600 text-white' : 'bg-blue-600 text-white'}`}
+                      >
+                        {phase === 'workout' ? '🔥 運動中！' : phase === 'halftime' ? '🛋️ 中場休息' : '💤 休息中'}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+
+            {/* --- 圖鑑模式 --- */}
+            {activeTab === 'gallery' && (
+              <div className="animate-fade-in">
+                <div className="flex flex-wrap justify-center gap-3 mb-12">
+                  {['all', 'red', 'blue', 'green'].map(t => (
+                    <button 
+                      key={t} 
+                      onClick={() => setFilter(t)}
+                      className={`px-6 py-2.5 rounded-2xl font-black border-4 transition-all scale-100 active:scale-95 ${
+                        filter === t ? 'bg-amber-900 text-white border-amber-900' : 'bg-white text-gray-500 border-gray-100 hover:border-amber-200'
+                      }`}
+                    >
+                      {t === 'all' ? '🌈 全部動作' : t === 'red' ? '🔴 紅隊' : t === 'blue' ? '🔵 藍隊' : '🟢 綠隊'}
+                    </button>
+                  ))}
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10">
+                  {cardData.filter(c => filter === 'all' || c.team === filter).map(card => (
+                    <CombinedCard key={card.id} card={card} />
+                  ))}
+                </div>
+              </div>
+            )}
+
+          </main>
+        </div>
+      );
+    }
+
+    const root = ReactDOM.createRoot(document.getElementById('root'));
+    root.render(<App />);
+  </script>
+</body>
+</html>
