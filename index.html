@@ -134,12 +134,14 @@
           </div>
 
           <div className="p-4 flex flex-col items-center bg-white border-b-2 border-gray-100">
-            <div className={`w-full aspect-[4/3] rounded-2xl border-4 border-dashed ${borderClass} bg-gray-50 mb-4 overflow-hidden relative flex flex-col items-center justify-center group`}>
+            {/* 💡 已將原本 aspect-[4/3] 修改為 aspect-[3/4] 直式比例，背景色改為純白 bg-white */}
+            <div className={`w-full aspect-[3/4] rounded-2xl border-4 border-dashed ${borderClass} bg-white mb-4 overflow-hidden relative flex flex-col items-center justify-center group`}>
               {!imgError ? (
                 <img 
                   src={currentSrc} 
                   alt={card.titleZh}
-                  className="w-full h-full object-contain absolute inset-0 p-2 z-10"
+                  // 💡 已移除 p-2 留白邊距，讓圖片完美撐滿
+                  className="w-full h-full object-contain absolute inset-0 z-10"
                   onError={() => {
                     if (imgAttempt === 0) {
                       // 找不到 image/ 內的圖，改嘗試同層級根目錄
