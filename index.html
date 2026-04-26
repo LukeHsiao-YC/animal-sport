@@ -53,10 +53,10 @@
       { id: 'R-09', team: 'red', category: '有氧運動', titleZh: '小熊爬', titleEn: 'Bear crawl', animal: '小熊', imageFile: 'R_9.png', emoji: '🐻', instruction: '四足跪姿、膝蓋離地3-5公分、對側手腳交替向前/後移動，需保持背部平直、臀部不晃動、視線看斜前方。', safety: '手掌要張開撐穩，肚子收緊。' },
       { id: 'R-10', team: 'red', category: '有氧運動', titleZh: '大象踏步走', titleEn: 'Elephant March', animal: '大象', imageFile: 'R_10.png', emoji: '🐘', instruction: '1. 起始姿勢：雙腳與臀同寬，身體前彎，雙手置於前方地板上，使身體呈倒「V」字型。 2. 動作執行：收緊腹部，單腳膝蓋伸直，另一腳彎曲，輪流交替模擬步伐。', safety: '動作要有力但不要震壞地板。' },
       
-      // 🔴 紅隊：有氧運動 Lv.2
-      { id: 'R2-01', team: 'red', category: '有氧運動', titleZh: '企鵝開合跳', titleEn: 'Jumping Jacks', animal: '企鵝', imageFile: 'R2_1.png', emoji: '🐧', instruction: '雙腳跳開時雙手在頭上拍手，雙腳收回時手拍大腿，保持輕快節奏。', safety: '腳尖輕輕落地，膝蓋不要鎖死。' },
-      { id: 'R2-02', team: 'red', category: '有氧運動', titleZh: '獵豹側邊跳', titleEn: 'Skater Hops', animal: '獵豹', imageFile: 'R2_2.png', emoji: '🐆', instruction: '向右側跳並用左腳尖向後點地，雙手像溜冰一樣擺動，換邊重複。', safety: '保持平衡，落地時膝蓋要微彎緩衝。' },
-      { id: 'R2-03', team: 'red', category: '有氧運動', titleZh: '猩猩登山者', titleEn: 'Mountain Climbers', animal: '大猩猩', imageFile: 'R2_3.png', emoji: '🦍', instruction: '雙手撐地呈伏地挺身姿勢，雙腳交替快速向胸部跑動。', safety: '屁股不要抬得太高，背部保持平直。' },
+      // 🔴 紅隊：有氧運動 Lv.2 (暫時註解關閉)
+      // { id: 'R2-01', team: 'red', category: '有氧運動', titleZh: '企鵝開合跳', titleEn: 'Jumping Jacks', animal: '企鵝', imageFile: 'R2_1.png', emoji: '🐧', instruction: '雙腳跳開時雙手在頭上拍手，雙腳收回時手拍大腿，保持輕快節奏。', safety: '腳尖輕輕落地，膝蓋不要鎖死。' },
+      // { id: 'R2-02', team: 'red', category: '有氧運動', titleZh: '獵豹側邊跳', titleEn: 'Skater Hops', animal: '獵豹', imageFile: 'R2_2.png', emoji: '🐆', instruction: '向右側跳並用左腳尖向後點地，雙手像溜冰一樣擺動，換邊重複。', safety: '保持平衡，落地時膝蓋要微彎緩衝。' },
+      // { id: 'R2-03', team: 'red', category: '有氧運動', titleZh: '猩猩登山者', titleEn: 'Mountain Climbers', animal: '大猩猩', imageFile: 'R2_3.png', emoji: '🦍', instruction: '雙手撐地呈伏地挺身姿勢，雙腳交替快速向胸部跑動。', safety: '屁股不要抬得太高，背部保持平直。' },
 
       // 🔵 藍隊：肌力訓練 Lv.1
       { id: 'B-01', team: 'blue', category: '肌力訓練', titleZh: '大猩猩蹲蹲', titleEn: 'squats', animal: '大猩猩', imageFile: 'B_1.png', emoji: '🦍', instruction: '雙腳打開與肩膀同寬，屁股往後座，就像要坐椅子一樣，背盡量打直。', safety: '膝蓋不要超過腳尖，重心放在腳跟，慢慢下蹲在站起來。' },
@@ -113,7 +113,8 @@
     const AUDIO_FILES = {
       bgmWorkout: 'audio/sport.mp3',   // 🎵 運動 BGM
       bgmRest: 'audio/relax.mp3',      // 🎵 休息 BGM
-      bgmMetronome: 'audio/metronome.mp3', // ⏱️ 節拍器音效 (新增)
+      // 💡 我先幫您替換為一個穩定的線上節拍器音效，若您日後上傳了 metronome.mp3，可改回 'audio/metronome.mp3'
+      bgmMetronome: 'https://actions.google.com/sounds/v1/tools/clock_ticking.ogg', 
       sfxDrawCard: 'https://assets.mixkit.co/active_storage/sfx/2568/2568-preview.mp3', 
       sfxSuccess: 'https://assets.mixkit.co/active_storage/sfx/2000/2000-preview.mp3',   
       sfxClick: 'https://assets.mixkit.co/active_storage/sfx/2571/2571-preview.mp3'      
@@ -327,6 +328,9 @@
 
         // 階段切換時，清除所有漸弱效果，確保音量恢復為最大
         clearInterval(fadeIntervalRef.current);
+        if (bgmAudioRef.current) bgmAudioRef.current.volume = 1;
+        if (bgmRestAudioRef.current) bgmRestAudioRef.current.volume = 1;
+        if (bgmMetronomeRef.current) bgmMetronomeRef.current.volume = 1;
 
         if (isRunning && !isMuted) {
           if (phase === 'workout') {
@@ -335,17 +339,14 @@
             // 依照當前選擇的模式播放音樂或節拍器
             if (audioMode === 'music') {
               bgmMetronomeRef.current.pause();
-              bgmAudioRef.current.volume = 1;
               bgmAudioRef.current.play().catch(e => console.log("BGM play prevented:", e));
             } else {
               bgmAudioRef.current.pause();
-              bgmMetronomeRef.current.volume = 1;
               bgmMetronomeRef.current.play().catch(e => console.log("Metronome play prevented:", e));
             }
           } else if (phase === 'rest' || phase === 'halftime') {
             bgmAudioRef.current.pause();
             bgmMetronomeRef.current.pause();
-            bgmRestAudioRef.current.volume = 1;
             bgmRestAudioRef.current.play().catch(e => console.log("Rest BGM play prevented:", e));
           } else {
             bgmAudioRef.current.pause();
@@ -452,7 +453,7 @@
             setTimeLeft(p => {
               const newTime = p - 1;
               
-              // 💡 更強烈的雙向漸弱邏輯 (Steeper Fade-out)
+              // 💡 終極漸弱邏輯 (最後3秒啟動)
               if (newTime === 3 && !isMuted) {
                 const targetAudio = phase === 'workout' 
                   ? (audioModeRef.current === 'music' ? bgmAudioRef.current : bgmMetronomeRef.current) 
@@ -461,14 +462,24 @@
                 if (targetAudio) {
                    clearInterval(fadeIntervalRef.current);
                    let vol = targetAudio.volume;
-                   // 每 100 毫秒扣除 0.08 音量，大約 1.25 秒完全靜音 (最後 1 秒幾乎聽不到)
+                   let ticks = 0;
+                   const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+
                    fadeIntervalRef.current = setInterval(() => {
-                       vol -= 0.08; 
-                       if (vol <= 0) {
-                           vol = 0;
+                       ticks++;
+                       
+                       if (!isIOS) {
+                           // 電腦/Android：指數型銳減，每0.1秒音量打75折，1秒內降至極小聲
+                           vol *= 0.75; 
+                           if (vol <= 0.05) vol = 0;
+                           targetAudio.volume = vol;
+                       }
+
+                       // 不論何種裝置，在倒數大約最後 0.5 秒時(ticks達到25次)，強制暫停音軌
+                       if (ticks >= 25 || vol === 0) {
+                           targetAudio.pause();
                            clearInterval(fadeIntervalRef.current);
                        }
-                       targetAudio.volume = vol;
                    }, 100);
                 }
               }
