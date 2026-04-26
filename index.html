@@ -5,17 +5,13 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>動物運動森友會卡牌</title>
   
-  <!-- 引入 Tailwind CSS -->
   <script src="https://cdn.tailwindcss.com"></script>
   
-  <!-- 引入 FontAwesome 圖示庫 -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   
-  <!-- 引入 React 與 ReactDOM -->
   <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
   <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
   
-  <!-- 引入 Babel 以在瀏覽器編譯 JSX -->
   <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
 
   <style>
@@ -38,16 +34,14 @@
 </head>
 <body class="bg-[#FFFDF9] font-sans text-gray-800">
 
-  <!-- React 應用程式掛載點 -->
   <div id="root"></div>
 
-  <!-- React 核心程式碼 -->
   <script type="text/babel">
-    const { useState, useEffect } = React;
+    const { useState, useEffect, useRef } = React;
 
-    // --- 資料庫同步 ---
+    // --- 資料庫同步 (包含 Lv.1 與 Lv.2) ---
     const cardData = [
-      // 🔴 紅隊：有氧運動
+      // 🔴 紅隊：有氧運動 Lv.1
       { id: 'R-01', team: 'red', category: '有氧運動', titleZh: '海星點點腳', titleEn: 'Step jacks', animal: '兔子', imageFile: 'R_1.png', emoji: '🐰', instruction: '身體站直，雙腳併攏，挺胸收肚子，接下來向右側跨出一大步後右腳著地，左腳隨即跟上併攏，雙臂自然擺動或隨節奏舉起，接著換左側重複，過程膝蓋微彎保持核心收緊。', safety: '保持呼吸，手臂舉過頭頂，背要打直。' },
       { id: 'R-02', team: 'red', category: '有氧運動', titleZh: '巨人踏步走', titleEn: 'High knee walk', animal: '小狗', imageFile: 'R_2.png', emoji: '🐶', instruction: '起始站立，收緊核心，向前邁步並將一側膝蓋儘量抬高至腰部，同時手臂交替擺動，保持上半身直立、不駝背，持續交替雙腿行進。', safety: '身體不要東倒西歪，保持平衡。' },
       { id: 'R-03', team: 'red', category: '有氧運動', titleZh: '閃電拳擊手', titleEn: 'Shadow Boxing', animal: '松鼠', imageFile: 'R_3.png', emoji: '🐿️', instruction: '向前方揮出閃電拳頭，左右輪流快快出擊！', safety: '出拳不要太用力，手肘要留一點空間。' },
@@ -58,15 +52,20 @@
       { id: 'R-08', team: 'red', category: '有氧運動', titleZh: '獵豹原地跑', titleEn: 'Jog in place', animal: '獵豹', imageFile: 'R_8.png', emoji: '🐆', instruction: '維持核心收緊，在原地踏步或慢跑，膝蓋微彎以緩衝衝擊，搭配雙手自然擺動。', safety: '身體要打直，原地跑步。' },
       { id: 'R-09', team: 'red', category: '有氧運動', titleZh: '小熊爬', titleEn: 'Bear crawl', animal: '小熊', imageFile: 'R_9.png', emoji: '🐻', instruction: '四足跪姿、膝蓋離地3-5公分、對側手腳交替向前/後移動，需保持背部平直、臀部不晃動、視線看斜前方。', safety: '手掌要張開撐穩，肚子收緊。' },
       { id: 'R-10', team: 'red', category: '有氧運動', titleZh: '大象踏步走', titleEn: 'Elephant March', animal: '大象', imageFile: 'R_10.png', emoji: '🐘', instruction: '1. 起始姿勢：雙腳與臀同寬，身體前彎，雙手置於前方地板上，使身體呈倒「V」字型。 2. 動作執行：收緊腹部，單腳膝蓋伸直，另一腳彎曲，輪流交替模擬步伐。', safety: '動作要有力但不要震壞地板。' },
+      
+      // 🔴 紅隊：有氧運動 Lv.2
+      { id: 'R2-01', team: 'red', category: '有氧運動', titleZh: '企鵝開合跳', titleEn: 'Jumping Jacks', animal: '企鵝', imageFile: 'R2_1.png', emoji: '🐧', instruction: '雙腳跳開時雙手在頭上拍手，雙腳收回時手拍大腿，保持輕快節奏。', safety: '腳尖輕輕落地，膝蓋不要鎖死。' },
+      { id: 'R2-02', team: 'red', category: '有氧運動', titleZh: '獵豹側邊跳', titleEn: 'Skater Hops', animal: '獵豹', imageFile: 'R2_2.png', emoji: '🐆', instruction: '向右側跳並用左腳尖向後點地，雙手像溜冰一樣擺動，換邊重複。', safety: '保持平衡，落地時膝蓋要微彎緩衝。' },
+      { id: 'R2-03', team: 'red', category: '有氧運動', titleZh: '猩猩登山者', titleEn: 'Mountain Climbers', animal: '大猩猩', imageFile: 'R2_3.png', emoji: '🦍', instruction: '雙手撐地呈伏地挺身姿勢，雙腳交替快速向胸部跑動。', safety: '屁股不要抬得太高，背部保持平直。' },
 
-      // 🔵 藍隊：肌力訓練
-      { id: 'B-01', team: 'blue', category: '肌力訓練', titleZh: '大猩猩深蹲', titleEn: 'squats', animal: '大猩猩', imageFile: 'B_1.png', emoji: '🦍', instruction: '雙腳打開與肩膀同寬，屁股往後座，就像要坐椅子一樣，背盡量打直。', safety: '膝蓋不要超過腳尖，重心放在腳跟，慢慢下蹲在站起來。' },
+      // 🔵 藍隊：肌力訓練 Lv.1
+      { id: 'B-01', team: 'blue', category: '肌力訓練', titleZh: '大猩猩蹲蹲', titleEn: 'squats', animal: '大猩猩', imageFile: 'B_1.png', emoji: '🦍', instruction: '雙腳打開與肩膀同寬，屁股往後座，就像要坐椅子一樣，背盡量打直。', safety: '膝蓋不要超過腳尖，重心放在腳跟，慢慢下蹲在站起來。' },
       { id: 'B-02', team: 'blue', category: '肌力訓練', titleZh: '長頸鹿弓步蹲', titleEn: 'lunges', animal: '長頸鹿', imageFile: 'B_2.png', emoji: '🦒', instruction: '挺胸站立，邁出一腳並雙膝下蹲至約 90 度，前膝不超過腳尖，後膝靠近地面，重心置於前腳，核心收緊保持垂直上下。', safety: '前腳膝蓋不要超過腳尖，後腳膝蓋不要撞到地板。保持平衡慢慢做。' },
       { id: 'B-03', team: 'blue', category: '肌力訓練', titleZh: '紅鶴踮腳尖', titleEn: 'calf raise', animal: '紅鶴', imageFile: 'B_3.png', emoji: '🦩', instruction: '雙腳與肩同寬站立，腳尖朝前，緩慢踮起腳跟，用前腳掌支撐，盡量抬高，停頓 1-2 秒，感受小腿肌肉繃緊，緩慢降下腳跟，回到起始位置。', safety: '身體站直，可以扶牆壁或椅子保持平衡。' },
       { id: 'B-04', team: 'blue', category: '肌力訓練', titleZh: '壁虎伏牆挺身', titleEn: 'wall push', animal: '壁虎', imageFile: 'B_4.png', emoji: '🦎', instruction: '站立於牆前約一步距離，雙手撐牆與肩同寬，身體保持直線前傾45度，彎肘讓胸口靠近牆面，呼氣發力推回至起始位置。', safety: '推的時候身體保持一直線，肚子收緊，背不要凹下去或拱起。' },
       { id: 'B-05', team: 'blue', category: '肌力訓練', titleZh: '貓頭鷹轉圈', titleEn: 'arm circle', animal: '貓頭鷹', imageFile: 'B_5.png', emoji: '🦉', instruction: '腳與肩同寬站立，挺胸，手臂向兩側平舉成一直線，先正向畫小圈五次，再逆向畫小圈重複。', safety: '雙肩放輕鬆，不要聳肩，畫圈時手臂保持伸直。' },
       { id: 'B-06', team: 'blue', category: '肌力訓練', titleZh: '螃蟹搭拱橋', titleEn: 'Bridge', animal: '螃蟹', imageFile: 'B_6.png', emoji: '🦀', instruction: '仰躺屈膝，腳掌踩地，以臀部發力抬起骨盆，使肩膀至膝蓋呈一直線，最高點夾緊臀部停五秒，緩慢下放，避免下背代償拱起。', safety: '肚子要收緊，不要拱背。' },
-      { id: 'B-07', team: 'blue', category: '肌力訓練', titleZh: '鱷魚支撐', titleEn: 'plank', animal: '鱷魚', imageFile: 'B_7.png', emoji: '🐊', instruction: '手肘在肩膀正下方，前臂與地面平行，從頭、肩膀、臀部到腳跟呈一直線，腹部與臀部收緊。', safety: '背要呈現一直線，不可以凹下去或凸起來，眼睛看地板，不要憋氣。' },
+      { id: 'B-07', team: 'blue', category: '肌力訓練', titleZh: '鱷魚1支撐', titleEn: 'plank', animal: '鱷魚', imageFile: 'B_7.png', emoji: '🐊', instruction: '手肘在肩膀正下方，前臂與地面平行，從頭、肩膀、臀部到腳跟呈一直線，腹部與臀部收緊。', safety: '背要呈現一直線，不可以凹下去或凸起來，眼睛看地板，不要憋氣。' },
       { id: 'B-08', team: 'blue', category: '肌力訓練', titleZh: '甲蟲翻肚皮', titleEn: 'Dead bug', animal: '甲蟲', imageFile: 'B_8.png', emoji: '🪲', instruction: '平躺，起始位置雙手舉高與身體垂直，雙腳屈膝舉起呈90度。吐氣時，左腳往下方延伸腳跟不碰地，同時右手向後伸直，回到起始位置，再換邊。', safety: '動作越慢越好，背貼緊地板。' },
       { id: 'B-09', team: 'blue', category: '肌力訓練', titleZh: '無尾熊靠牆坐', titleEn: 'wall sit', animal: '無尾熊', imageFile: 'B_9.png', emoji: '🐨', instruction: '雙腳與肩同寬並前站1-2步，下蹲至大腿與地面平行讓膝蓋呈90度。', safety: '背跟頭要貼緊牆壁，膝蓋不要超過腳尖。' },
       { id: 'B-10', team: 'blue', category: '肌力訓練', titleZh: '獵犬找獵物', titleEn: 'Bird-dog pose', animal: '獵犬', imageFile: 'B_10.png', emoji: '🐕', instruction: '四足跪姿，背部保持平坦，肚子收緊。緩慢同時將「右手」與「左腳」向前後延伸呈一直線，停留 3-5 秒，換邊進行。', safety: '骨盆與肩膀保持水平，避免身體左右搖晃或下背塌陷。' },
@@ -110,7 +109,15 @@
       return { minutesToday, daysThisWeek, history };
     };
 
-    // 💡 新增 compact 屬性：為 true 時會隱藏「怎麼做」文字，節省垂直空間
+    // --- 音效檔案位置 (請確保這些檔案存在於您的專案中) ---
+    // 💡 我們將剛才的 Jump & Play Power-Up.mp3 設定在這裡
+    const AUDIO_FILES = {
+      bgmWorkout: './audio/Jump & Play Power-Up.mp3', // 🎵 Suno BGM!
+      sfxDrawCard: 'https://assets.mixkit.co/active_storage/sfx/2568/2568-preview.mp3', // 唰一聲抽卡
+      sfxSuccess: 'https://assets.mixkit.co/active_storage/sfx/2000/2000-preview.mp3',   // 歡呼聲
+      sfxClick: 'https://assets.mixkit.co/active_storage/sfx/2571/2571-preview.mp3'      // 按鈕點擊
+    };
+
     const CombinedCard = ({ card, drawAnim = false, compact = false }) => {
       const [imgError, setImgError] = useState(false);
       const [imgAttempt, setImgAttempt] = useState(0); 
@@ -130,10 +137,13 @@
 
       const currentSrc = imgAttempt === 0 ? `./image/${card.imageFile}` : `./${card.imageFile}`;
 
+      // 判斷是 Lv.1 還是 Lv.2
+      const levelText = card.id.includes('R2-') || card.id.includes('B2-') ? '進階 Lv.2' : '初階 Lv.1';
+
       return (
         <div className={`w-full max-w-sm mx-auto bg-white rounded-3xl shadow-xl border-4 ${borderClass} overflow-hidden flex flex-col ${drawAnim ? 'animate-card-draw' : ''}`}>
           <div className={`${colorClass} text-white px-4 py-3 flex justify-between items-center`}>
-            <span className="font-black tracking-widest text-base sm:text-lg">{card.category}・初階 Lv.1</span>
+            <span className="font-black tracking-widest text-base sm:text-lg">{card.category}・{levelText}</span>
             <i className="fa-solid fa-star text-yellow-300"></i>
           </div>
 
@@ -161,7 +171,6 @@
             <h2 className={`text-3xl sm:text-4xl font-black mb-1 tracking-tighter ${textClass} text-center`}>
               {card.titleZh}
             </h2>
-            {/* 精簡模式下隱藏英文副標題 */}
             {!compact && (
               <h3 className="text-sm sm:text-lg font-bold text-gray-400 italic">
                 {card.titleEn}
@@ -170,8 +179,6 @@
           </div>
 
           <div className={`p-5 flex-1 bg-amber-50/20 flex flex-col justify-end ${compact ? 'pt-0' : ''}`}>
-            
-            {/* 💡 運動中精簡模式：隱藏冗長的教學文字 */}
             {!compact && (
               <div className="mb-6">
                 <div className={`flex items-center gap-2 mb-2 ${textClass}`}>
@@ -199,7 +206,6 @@
     };
 
     function App() {
-      // 💡 系統開關設定：設為 true 可開啟快轉功能，設為 false 即可關閉隱藏
       const SHOW_TEST_BUTTON = false;
 
       const [activeTab, setActiveTab] = useState('challenge');
@@ -219,12 +225,60 @@
       const [drawAnim, setDrawAnim] = useState(false);
       const [briefingIndex, setBriefingIndex] = useState(0); 
       
-      // 💡 新增：用來控制彈出視窗（Modal）的狀態，存放目前要顯示詳細資訊的卡牌
       const [selectedModalCard, setSelectedModalCard] = useState(null);
-
       const [encouragement, setEncouragement] = useState(null);
       const [restPrompt, setRestPrompt] = useState("");
       const [stats, setStats] = useState({ minutesToday: 0, daysThisWeek: 0 });
+
+      // --- 音樂與音效控制 (Audio Refs) ---
+      const [isMuted, setIsMuted] = useState(false);
+      const bgmAudioRef = useRef(null);
+      const sfxAudioRef = useRef(null);
+
+      // 初始化 Audio 物件
+      useEffect(() => {
+        bgmAudioRef.current = new Audio(AUDIO_FILES.bgmWorkout);
+        bgmAudioRef.current.loop = true; // 設定 BGM 無縫循環播放
+        
+        sfxAudioRef.current = new Audio();
+        
+        return () => {
+          if (bgmAudioRef.current) {
+            bgmAudioRef.current.pause();
+            bgmAudioRef.current.src = "";
+          }
+        };
+      }, []);
+
+      // 監聽靜音狀態
+      useEffect(() => {
+        if (bgmAudioRef.current) bgmAudioRef.current.muted = isMuted;
+        if (sfxAudioRef.current) sfxAudioRef.current.muted = isMuted;
+      }, [isMuted]);
+
+      // 播放音效的輔助函數
+      const playSFX = (url) => {
+        if (sfxAudioRef.current && !isMuted) {
+          sfxAudioRef.current.src = url;
+          sfxAudioRef.current.play().catch(e => console.log("Audio play prevented:", e));
+        }
+      };
+
+      // 監聽 phase 改變來控制 BGM
+      useEffect(() => {
+        if (!bgmAudioRef.current) return;
+
+        if (phase === 'workout' && isRunning && !isMuted) {
+          bgmAudioRef.current.play().catch(e => console.log("BGM play prevented:", e));
+        } else {
+          bgmAudioRef.current.pause();
+        }
+
+        if (phase === 'complete') {
+            playSFX(AUDIO_FILES.sfxSuccess);
+        }
+      }, [phase, isRunning, isMuted]);
+
 
       useEffect(() => {
         const currentStats = getStats();
@@ -241,12 +295,14 @@
       };
 
       const toggleCardDisable = (cardId) => {
+        playSFX(AUDIO_FILES.sfxClick);
         setDisabledCardIds(prev => 
           prev.includes(cardId) ? prev.filter(id => id !== cardId) : [...prev, cardId]
         );
       };
 
       const startChallenge = (mode) => {
+        playSFX(AUDIO_FILES.sfxClick);
         const availableReds = cardData.filter(c => c.team === 'red' && !disabledCardIds.includes(c.id));
         const availableBlues = cardData.filter(c => c.team === 'blue' && !disabledCardIds.includes(c.id));
         
@@ -272,6 +328,7 @@
       };
 
       const startTimerProcess = () => {
+        playSFX(AUDIO_FILES.sfxClick);
         setPhase('workout');
         setCurrentRound(1);
         setCurrentIndex(0);
@@ -282,6 +339,7 @@
       };
 
       const triggerDraw = () => {
+        playSFX(AUDIO_FILES.sfxDrawCard);
         setDrawAnim(false);
         setTimeout(() => setDrawAnim(true), 50);
       };
@@ -334,9 +392,9 @@
       }, [isRunning, timeLeft, phase, currentRound, currentIndex, challengeMode]);
 
       return (
-        <div className="pb-20">
+        <div className="pb-20 relative">
           
-          {/* 🧪 測試快轉按鈕 (加上 SHOW_TEST_BUTTON 開關判斷) */}
+          {/* 🧪 測試快轉按鈕 */}
           {SHOW_TEST_BUTTON && activeTab === 'challenge' && isRunning && phase !== 'briefing' && (
             <div className="fixed bottom-6 right-6 z-50 animate-fade-in">
               <button 
@@ -349,16 +407,27 @@
           )}
 
           <header className="bg-white border-b-4 border-amber-100 sticky top-0 z-30 shadow-sm">
-            <div className="max-w-5xl mx-auto px-4 py-4 flex flex-col sm:flex-row justify-between items-center gap-4">
+            <div className="max-w-5xl mx-auto px-4 py-4 flex flex-col sm:flex-row justify-between items-center gap-4 relative">
+              
               <div className="flex items-center gap-3">
                 <div className="bg-amber-400 p-2 rounded-xl shadow-sm">
                   <i className="fa-solid fa-wand-magic-sparkles text-white text-xl"></i>
                 </div>
                 <h1 className="text-2xl font-black text-amber-900 tracking-tighter">動物運動森友會</h1>
               </div>
-              <div className="flex bg-gray-100 p-1.5 rounded-2xl">
-                <button onClick={() => { setActiveTab('challenge'); setIsRunning(false); setPhase('ready'); }} className={`px-6 py-2 rounded-xl font-black transition-all ${activeTab === 'challenge' ? 'bg-amber-500 text-white shadow-md' : 'text-gray-400'}`}>挑戰模式</button>
-                <button onClick={() => setActiveTab('gallery')} className={`px-6 py-2 rounded-xl font-black transition-all ${activeTab === 'gallery' ? 'bg-white text-amber-800 shadow-md' : 'text-gray-400'}`}>卡牌圖鑑</button>
+
+              {/* 🎵 靜音切換按鈕 */}
+              <button 
+                onClick={() => { playSFX(AUDIO_FILES.sfxClick); setIsMuted(!isMuted); }} 
+                className={`absolute top-4 right-4 sm:relative sm:top-0 sm:right-0 w-10 h-10 rounded-full flex items-center justify-center transition-colors shadow-sm border-2 ${isMuted ? 'bg-gray-100 text-gray-400 border-gray-200' : 'bg-amber-100 text-amber-600 border-amber-200 hover:bg-amber-200'}`}
+                title={isMuted ? "取消靜音" : "靜音"}
+              >
+                <i className={`fa-solid ${isMuted ? 'fa-volume-xmark' : 'fa-volume-high'}`}></i>
+              </button>
+
+              <div className="flex bg-gray-100 p-1.5 rounded-2xl w-full sm:w-auto justify-center">
+                <button onClick={() => { playSFX(AUDIO_FILES.sfxClick); setActiveTab('challenge'); setIsRunning(false); setPhase('ready'); }} className={`px-6 py-2 rounded-xl font-black transition-all ${activeTab === 'challenge' ? 'bg-amber-500 text-white shadow-md' : 'text-gray-400'}`}>挑戰模式</button>
+                <button onClick={() => { playSFX(AUDIO_FILES.sfxClick); setActiveTab('gallery'); }} className={`px-6 py-2 rounded-xl font-black transition-all ${activeTab === 'gallery' ? 'bg-white text-amber-800 shadow-md' : 'text-gray-400'}`}>卡牌圖鑑</button>
               </div>
             </div>
           </header>
@@ -370,7 +439,6 @@
               <div className="max-w-xl mx-auto animate-fade-in">
                 <div className="bg-white rounded-[2rem] shadow-2xl p-6 sm:p-12 border-8 border-amber-50 relative overflow-hidden">
                   
-                  {/* --- 階段 1：準備畫面 --- */}
                   {phase === 'ready' ? (
                     <div className="text-center py-4">
                       <div className="text-8xl mb-6 animate-bounce">🏕️</div>
@@ -394,7 +462,7 @@
                       </div>
 
                       <button 
-                        onClick={() => setPhase('pool_selection')}
+                        onClick={() => { playSFX(AUDIO_FILES.sfxClick); setPhase('pool_selection'); }}
                         className="mb-6 bg-gray-100 hover:bg-gray-200 text-gray-600 font-bold py-3 px-6 rounded-xl border-2 border-gray-200 transition-colors w-full flex justify-center items-center gap-2"
                       >
                         <i className="fa-solid fa-gear"></i> 自訂牌組設定 (已排除 {disabledCardIds.length} 個動作)
@@ -418,7 +486,6 @@
                     </div>
 
                   ) : phase === 'pool_selection' ? (
-                    /* --- 階段 1.5：自訂牌組畫面 --- */
                     <div className="text-center py-4 animate-fade-in">
                        <h2 className="text-3xl font-black text-amber-900 mb-2">自訂運動牌組</h2>
                        <p className="text-gray-500 font-bold mb-6 text-sm">點擊按鈕來取消勾選不想出現的動作。<br/>(紅、藍隊最少需保留 3 個喔！)</p>
@@ -461,13 +528,12 @@
                          </div>
                        </div>
 
-                       <button onClick={() => setPhase('ready')} className="bg-amber-900 text-white text-lg font-black px-6 py-4 rounded-2xl shadow-lg w-full">
+                       <button onClick={() => { playSFX(AUDIO_FILES.sfxClick); setPhase('ready'); }} className="bg-amber-900 text-white text-lg font-black px-6 py-4 rounded-2xl shadow-lg w-full hover:bg-black">
                           💾 儲存並返回
                        </button>
                     </div>
 
                   ) : phase === 'briefing' ? (
-                    /* --- 階段 2：行前說明畫面 --- */
                     <div className="text-center py-2 animate-fade-in flex flex-col h-[700px]">
                       <h2 className="text-3xl font-black text-amber-900 mb-2">本日菜單預習</h2>
                       <p className="text-gray-500 font-bold mb-4 text-sm">點擊動物頭像，看看稍後要做的 6 個動作吧！</p>
@@ -476,7 +542,7 @@
                         {deck.map((card, idx) => (
                            <button 
                              key={idx}
-                             onClick={() => setBriefingIndex(idx)}
+                             onClick={() => { playSFX(AUDIO_FILES.sfxClick); setBriefingIndex(idx); }}
                              className={`relative p-2 rounded-2xl text-4xl transition-all border-4 flex-shrink-0 ${briefingIndex === idx ? (card.team === 'red' ? 'bg-red-100 border-red-500 scale-110' : 'bg-blue-100 border-blue-500 scale-110') : 'bg-gray-50 border-transparent opacity-50 hover:opacity-100'}`}
                            >
                              {card.emoji}
@@ -499,10 +565,9 @@
                     </div>
 
                   ) : phase === 'complete' ? (
-                    /* --- 階段：完賽總結 --- */
                     <div className="text-center py-4 animate-fade-in">
                       <div className="w-24 h-24 bg-yellow-100 rounded-full flex items-center justify-center mx-auto mb-4 shadow-inner">
-                        <i className="fa-solid fa-trophy text-yellow-500 text-4xl"></i>
+                        <i className="fa-solid fa-trophy text-yellow-500 text-4xl animate-bounce"></i>
                       </div>
                       <h2 className="text-3xl font-black text-amber-900 mb-1">本次訓練總結</h2>
                       <p className="text-gray-500 font-bold mb-6 text-sm">你完成了 {challengeMode} 分鐘的挑戰，流了好多汗，超棒的！</p>
@@ -522,7 +587,6 @@
                         </div>
                       </div>
 
-                      {/* 💡 修改：綠隊緩和推薦變成「可點擊的按鈕」 */}
                       <div className="bg-green-50 rounded-2xl p-4 mb-8 border-2 border-green-200 shadow-sm relative overflow-hidden">
                         <div className="absolute -right-4 -top-4 opacity-10">
                           <i className="fa-solid fa-heart text-green-500 text-8xl"></i>
@@ -545,13 +609,12 @@
                         <p className="text-[10px] text-green-600 font-bold mt-3">點擊上方動作看怎麼做，慢慢呼吸停留 20~40 秒喔！</p>
                       </div>
 
-                      <button onClick={() => setPhase('ready')} className="bg-amber-900 text-white font-black px-12 py-4 rounded-2xl shadow hover:bg-black w-full">
+                      <button onClick={() => { playSFX(AUDIO_FILES.sfxClick); setPhase('ready'); }} className="bg-amber-900 text-white font-black px-12 py-4 rounded-2xl shadow hover:bg-black w-full">
                         回主畫面
                       </button>
                     </div>
 
                   ) : (
-                    /* --- 階段 3：運動中 / 休息 / 中場休息 --- */
                     <div className="flex flex-col items-center">
                       <div className="w-full flex justify-between items-center mb-6 bg-gray-50 p-3 sm:p-4 rounded-2xl">
                         <div className="flex items-center gap-2 sm:gap-3">
@@ -563,10 +626,10 @@
                           </div>
                         </div>
                         <div className="flex gap-2">
-                          <button onClick={() => setIsRunning(!isRunning)} className="w-10 h-10 bg-white rounded-xl shadow-sm border border-gray-100 flex items-center justify-center">
+                          <button onClick={() => { playSFX(AUDIO_FILES.sfxClick); setIsRunning(!isRunning); }} className="w-10 h-10 bg-white rounded-xl shadow-sm border border-gray-100 flex items-center justify-center">
                             {isRunning ? <i className="fa-solid fa-pause text-gray-600"></i> : <i className="fa-solid fa-play text-gray-600"></i>}
                           </button>
-                          <button onClick={() => { setIsRunning(false); setPhase('ready'); }} className="w-10 h-10 bg-white rounded-xl shadow-sm border border-gray-100 flex items-center justify-center">
+                          <button onClick={() => { playSFX(AUDIO_FILES.sfxClick); setIsRunning(false); setPhase('ready'); }} className="w-10 h-10 bg-white rounded-xl shadow-sm border border-gray-100 flex items-center justify-center">
                             <i className="fa-solid fa-rotate-left text-gray-600"></i>
                           </button>
                         </div>
@@ -584,7 +647,6 @@
                       </div>
 
                       <div className="w-full flex items-center justify-center relative">
-                        {/* 💡 運動中：開啟 compact 模式隱藏文字 */}
                         {phase === 'workout' && (
                           <CombinedCard card={deck[currentIndex]} drawAnim={drawAnim} compact={true} />
                         )}
@@ -651,7 +713,7 @@
                   {['all', 'red', 'blue', 'green'].map(t => (
                     <button 
                       key={t} 
-                      onClick={() => setFilter(t)}
+                      onClick={() => { playSFX(AUDIO_FILES.sfxClick); setFilter(t); }}
                       className={`px-6 py-2.5 rounded-2xl font-black border-4 transition-all scale-100 active:scale-95 ${
                         filter === t ? 'bg-amber-900 text-white border-amber-900' : 'bg-white text-gray-500 border-gray-100 hover:border-amber-200'
                       }`}
@@ -661,7 +723,6 @@
                   ))}
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10">
-                  {/* 圖鑑模式下，compact 設為 false，顯示全部教學文字 */}
                   {cardData.filter(c => filter === 'all' || c.team === filter).map(card => (
                     <CombinedCard key={card.id} card={card} compact={false} />
                   ))}
@@ -671,7 +732,6 @@
 
           </main>
 
-          {/* 💡 新增：彈出視窗 (Modal) 用於顯示卡牌詳細資訊 */}
           {selectedModalCard && (
             <div 
               className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fade-in" 
@@ -681,15 +741,12 @@
                 className="relative w-full max-w-sm max-h-[90vh] overflow-y-auto no-scrollbar rounded-3xl" 
                 onClick={(e) => e.stopPropagation()}
               >
-                {/* 關閉按鈕 */}
                 <button 
                   onClick={() => setSelectedModalCard(null)}
                   className="absolute top-2 right-2 z-50 w-10 h-10 bg-white/90 backdrop-blur rounded-full flex items-center justify-center text-gray-800 shadow-md hover:bg-white transition-colors border-2 border-gray-200"
                 >
                   <i className="fa-solid fa-xmark text-xl"></i>
                 </button>
-                
-                {/* 完整卡牌內容 */}
                 <CombinedCard card={selectedModalCard} compact={false} />
               </div>
             </div>
