@@ -109,10 +109,10 @@
       return { minutesToday, daysThisWeek, history };
     };
 
-    // --- 音效檔案位置 ---
+    // --- 音效檔案位置 (移除 ./ 確保 GitHub Pages 解析正確) ---
     const AUDIO_FILES = {
-      bgmWorkout: './audio/sport.mp3', // 🎵 運動 BGM
-      bgmRest: './audio/relax.mp3',    // 🎵 休息 BGM (新增)
+      bgmWorkout: 'audio/sport.mp3', // 🎵 運動 BGM
+      bgmRest: 'audio/relax.mp3',    // 🎵 休息 BGM
       sfxDrawCard: 'https://assets.mixkit.co/active_storage/sfx/2568/2568-preview.mp3', 
       sfxSuccess: 'https://assets.mixkit.co/active_storage/sfx/2000/2000-preview.mp3',   
       sfxClick: 'https://assets.mixkit.co/active_storage/sfx/2571/2571-preview.mp3'      
@@ -135,9 +135,8 @@
       const borderClass = isRed ? 'border-red-700' : isBlue ? 'border-blue-600' : 'border-green-600';
       const textClass = isRed ? 'text-red-800' : isBlue ? 'text-blue-800' : 'text-green-800';
 
-      const currentSrc = imgAttempt === 0 ? `./image/${card.imageFile}` : `./${card.imageFile}`;
+      const currentSrc = imgAttempt === 0 ? `image/${card.imageFile}` : `${card.imageFile}`;
 
-      // 判斷是 Lv.1 還是 Lv.2
       const levelText = card.id.includes('R2-') || card.id.includes('B2-') ? '進階 Lv.2' : '初階 Lv.1';
 
       return (
@@ -230,6 +229,9 @@
       const [restPrompt, setRestPrompt] = useState("");
       const [stats, setStats] = useState({ minutesToday: 0, daysThisWeek: 0 });
 
+      // 漸弱效果的定時器記錄
+      const fadeIntervalRef = useRef(null);
+
       // --- 喚醒鎖定 (WakeLock) API 控制，防止螢幕變暗 ---
       const wakeLockRef = useRef(null);
 
@@ -252,7 +254,6 @@
         }
       };
 
-      // 當 isRunning 變更時，請求或釋放喚醒鎖定
       useEffect(() => {
         if (isRunning) {
           requestWakeLock();
@@ -262,7 +263,6 @@
         return () => releaseWakeLock(); 
       }, [isRunning]);
 
-      // 當使用者切換分頁再回來時，如果還在運動中，重新請求喚醒鎖定
       useEffect(() => {
         const handleVisibilityChange = () => {
           if (document.visibilityState === 'visible' && isRunning) {
@@ -276,16 +276,15 @@
       // --- 音樂與音效控制 (Audio Refs) ---
       const [isMuted, setIsMuted] = useState(false);
       const bgmAudioRef = useRef(null);
-      const bgmRestAudioRef = useRef(null); // 💡 新增的休息音樂 Ref
+      const bgmRestAudioRef = useRef(null); 
       const sfxAudioRef = useRef(null);
 
-      // 初始化 Audio 物件
       useEffect(() => {
         bgmAudioRef.current = new Audio(AUDIO_FILES.bgmWorkout);
         bgmAudioRef.current.loop = true; 
         
         bgmRestAudioRef.current = new Audio(AUDIO_FILES.bgmRest);
-        bgmRestAudioRef.current.loop = true; // 設定休息 BGM 循環
+        bgmRestAudioRef.current.loop = true; 
 
         sfxAudioRef.current = new Audio();
         
@@ -301,14 +300,12 @@
         };
       }, []);
 
-      // 監聽靜音狀態 (確保所有音軌同步靜音)
       useEffect(() => {
         if (bgmAudioRef.current) bgmAudioRef.current.muted = isMuted;
         if (bgmRestAudioRef.current) bgmRestAudioRef.current.muted = isMuted;
         if (sfxAudioRef.current) sfxAudioRef.current.muted = isMuted;
       }, [isMuted]);
 
-      // 播放音效的輔助函數
       const playSFX = (url) => {
         if (sfxAudioRef.current && !isMuted) {
           sfxAudioRef.current.src = url;
@@ -316,18 +313,19 @@
         }
       };
 
-      // 監聽 phase 改變來控制背景音樂的播放與暫停
+      // 監聽 phase 改變來控制背景音樂
       useEffect(() => {
         if (!bgmAudioRef.current || !bgmRestAudioRef.current) return;
 
+        // 💡 階段切換時，清除所有漸弱效果，確保音量恢復為最大
+        clearInterval(fadeIntervalRef.current);
+
         if (isRunning && !isMuted) {
           if (phase === 'workout') {
-            // 運動階段：暫停休息音樂，播放運動音樂
             bgmRestAudioRef.current.pause();
             bgmAudioRef.current.volume = 1;
             bgmAudioRef.current.play().catch(e => console.log("BGM play prevented:", e));
           } else if (phase === 'rest' || phase === 'halftime') {
-            // 休息階段：暫停運動音樂，播放休息音樂
             bgmAudioRef.current.pause();
             bgmRestAudioRef.current.volume = 1;
             bgmRestAudioRef.current.play().catch(e => console.log("Rest BGM play prevented:", e));
@@ -336,7 +334,6 @@
             bgmRestAudioRef.current.pause();
           }
         } else {
-          // 沒有在計時或是靜音時，全部暫停
           bgmAudioRef.current.pause();
           bgmRestAudioRef.current.pause();
         }
@@ -395,6 +392,23 @@
 
       const startTimerProcess = () => {
         playSFX(AUDIO_FILES.sfxClick);
+        
+        // 💡 [手機端強制解鎖音效]：在使用者按下按鈕的瞬間，讓兩個音樂都「出聲」一下，取得手機的播放權限！
+        if (bgmAudioRef.current && !isMuted) {
+            bgmAudioRef.current.volume = 1;
+            bgmAudioRef.current.play().catch(e => console.log("Unlock sport BGM prevented:", e));
+        }
+        if (bgmRestAudioRef.current && !isMuted) {
+            bgmRestAudioRef.current.volume = 0; // 短暫靜音播放來解鎖
+            const playPromise = bgmRestAudioRef.current.play();
+            if (playPromise !== undefined) {
+                playPromise.then(() => {
+                    bgmRestAudioRef.current.pause();
+                    bgmRestAudioRef.current.volume = 1; // 恢復音量供稍後使用
+                }).catch(e => console.log("Unlock relax BGM prevented:", e));
+            }
+        }
+
         setPhase('workout');
         setCurrentRound(1);
         setCurrentIndex(0);
@@ -417,12 +431,22 @@
             setTimeLeft(p => {
               const newTime = p - 1;
               
-              // 💡 雙向漸弱邏輯：當時間剩下 3 秒以內時，進行中的音樂音量逐漸減小
-              if (newTime <= 3 && newTime > 0 && !isMuted) {
-                if (phase === 'workout' && bgmAudioRef.current) {
-                   bgmAudioRef.current.volume = newTime / 3; // 運動音樂漸弱
-                } else if ((phase === 'rest' || phase === 'halftime') && bgmRestAudioRef.current) {
-                   bgmRestAudioRef.current.volume = newTime / 3; // 休息音樂漸弱
+              // 💡 更平滑的雙向漸弱邏輯 (Smooth Fade-out)
+              if (newTime === 3 && !isMuted) {
+                const targetAudio = phase === 'workout' ? bgmAudioRef.current : ((phase === 'rest' || phase === 'halftime') ? bgmRestAudioRef.current : null);
+                
+                if (targetAudio) {
+                   clearInterval(fadeIntervalRef.current);
+                   let vol = 1.0;
+                   // 每 100 毫秒調降一次音量，營造電影般的淡出感
+                   fadeIntervalRef.current = setInterval(() => {
+                       vol -= 0.05; 
+                       if (vol <= 0) {
+                           vol = 0;
+                           clearInterval(fadeIntervalRef.current);
+                       }
+                       targetAudio.volume = vol;
+                   }, 100);
                 }
               }
 
@@ -470,7 +494,6 @@
       return (
         <div className="pb-20 relative min-h-screen flex flex-col">
           
-          {/* 🧪 測試快轉按鈕 */}
           {SHOW_TEST_BUTTON && activeTab === 'challenge' && isRunning && phase !== 'briefing' && (
             <div className="fixed bottom-6 right-6 z-50 animate-fade-in">
               <button 
@@ -510,7 +533,6 @@
 
           <main className="max-w-6xl mx-auto px-4 py-8 flex-1 w-full">
             
-            {/* --- 挑戰模式 --- */}
             {activeTab === 'challenge' && (
               <div className="max-w-xl mx-auto animate-fade-in flex flex-col justify-between h-full">
                 <div className="bg-white rounded-[2rem] shadow-2xl p-6 sm:p-12 border-8 border-amber-50 relative overflow-hidden">
@@ -562,7 +584,6 @@
                         </div>
                       </div>
 
-                      {/* 💡 作者宣告與連結 */}
                       <div className="mt-8 pt-4 border-t-2 border-amber-50">
                         <p className="text-gray-400 font-bold text-sm">
                           蕭宇超製作 <a href="https://www.smilecloud.tw" target="_blank" rel="noopener noreferrer" className="text-amber-500 hover:text-amber-600 underline ml-1">www.smilecloud.tw</a>
