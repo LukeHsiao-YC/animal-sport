@@ -109,12 +109,10 @@
       return { minutesToday, daysThisWeek, history };
     };
 
-    // --- 音效檔案位置 ---
+    // --- 音效檔案位置 (移除了節拍器的mp3路徑) ---
     const AUDIO_FILES = {
-      bgmWorkout: 'audio/sport.mp3',   // 🎵 運動 BGM
-      bgmRest: 'audio/relax.mp3',      // 🎵 休息 BGM
-      // 💡 我先幫您替換為一個穩定的線上節拍器音效，若您日後上傳了 metronome.mp3，可改回 'audio/metronome.mp3'
-      bgmMetronome: 'https://actions.google.com/sounds/v1/tools/clock_ticking.ogg', 
+      bgmWorkout: 'audio/sport.mp3',   
+      bgmRest: 'audio/relax.mp3',      
       sfxDrawCard: 'https://assets.mixkit.co/active_storage/sfx/2568/2568-preview.mp3', 
       sfxSuccess: 'https://assets.mixkit.co/active_storage/sfx/2000/2000-preview.mp3',   
       sfxClick: 'https://assets.mixkit.co/active_storage/sfx/2571/2571-preview.mp3'      
@@ -248,7 +246,7 @@
         try {
           if ('wakeLock' in navigator) {
             wakeLockRef.current = await navigator.wakeLock.request('screen');
-            console.log('螢幕喚醒已開啟 (Screen Wake Lock active)');
+            console.log('螢幕喚醒已開啟');
           }
         } catch (err) {
           console.log('無法開啟螢幕喚醒:', err);
@@ -259,7 +257,6 @@
         if (wakeLockRef.current !== null) {
           await wakeLockRef.current.release();
           wakeLockRef.current = null;
-          console.log('螢幕喚醒已釋放 (Screen Wake Lock released)');
         }
       };
 
@@ -286,8 +283,12 @@
       const [isMuted, setIsMuted] = useState(false);
       const bgmAudioRef = useRef(null);
       const bgmRestAudioRef = useRef(null); 
-      const bgmMetronomeRef = useRef(null);
       const sfxAudioRef = useRef(null);
+      
+      // 💡 內建 Web Audio API 節拍器 Ref
+      const audioCtxRef = useRef(null);
+      const metronomeIntervalRef = useRef(null);
+      const metronomeVolRef = useRef(1); // 追蹤節拍器的漸弱音量
 
       useEffect(() => {
         bgmAudioRef.current = new Audio(AUDIO_FILES.bgmWorkout);
@@ -296,24 +297,30 @@
         bgmRestAudioRef.current = new Audio(AUDIO_FILES.bgmRest);
         bgmRestAudioRef.current.loop = true; 
 
-        bgmMetronomeRef.current = new Audio(AUDIO_FILES.bgmMetronome);
-        bgmMetronomeRef.current.loop = true;
-
         sfxAudioRef.current = new Audio();
         
         return () => {
           if (bgmAudioRef.current) { bgmAudioRef.current.pause(); bgmAudioRef.current.src = ""; }
           if (bgmRestAudioRef.current) { bgmRestAudioRef.current.pause(); bgmRestAudioRef.current.src = ""; }
-          if (bgmMetronomeRef.current) { bgmMetronomeRef.current.pause(); bgmMetronomeRef.current.src = ""; }
+          if (metronomeIntervalRef.current) clearInterval(metronomeIntervalRef.current);
         };
       }, []);
 
       useEffect(() => {
         if (bgmAudioRef.current) bgmAudioRef.current.muted = isMuted;
         if (bgmRestAudioRef.current) bgmRestAudioRef.current.muted = isMuted;
-        if (bgmMetronomeRef.current) bgmMetronomeRef.current.muted = isMuted;
         if (sfxAudioRef.current) sfxAudioRef.current.muted = isMuted;
       }, [isMuted]);
+
+      // 初始化 Audio Context (在點擊時觸發解鎖)
+      const initAudioCtx = () => {
+        if (!audioCtxRef.current) {
+          audioCtxRef.current = new (window.AudioContext || window.webkitAudioContext)();
+        }
+        if (audioCtxRef.current.state === 'suspended') {
+          audioCtxRef.current.resume();
+        }
+      };
 
       const playSFX = (url) => {
         if (sfxAudioRef.current && !isMuted) {
@@ -322,41 +329,71 @@
         }
       };
 
+      // 💡 純程式碼生成的短促「滴」聲 (Beep)
+      const playBeep = () => {
+        if (isMuted || metronomeVolRef.current <= 0) return;
+        if (!audioCtxRef.current) return;
+        
+        const osc = audioCtxRef.current.createOscillator();
+        const gainNode = audioCtxRef.current.createGain();
+        
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(800, audioCtxRef.current.currentTime); // 頻率 800Hz，清脆的嗶聲
+        
+        // 基礎音量乘上漸弱比例，維持 0.05 秒的短音
+        gainNode.gain.setValueAtTime(metronomeVolRef.current * 0.5, audioCtxRef.current.currentTime); 
+        gainNode.gain.exponentialRampToValueAtTime(0.001, audioCtxRef.current.currentTime + 0.05);
+        
+        osc.connect(gainNode);
+        gainNode.connect(audioCtxRef.current.destination);
+        
+        osc.start();
+        osc.stop(audioCtxRef.current.currentTime + 0.05);
+      };
+
+      // 💡 控制 Web Audio 節拍器的運作
+      useEffect(() => {
+        if (isRunning && phase === 'workout' && audioMode === 'metronome' && !isMuted) {
+          metronomeVolRef.current = 1; // 恢復音量
+          playBeep(); // 立刻播第一聲
+          metronomeIntervalRef.current = setInterval(() => {
+            playBeep();
+          }, 461); // 130 BPM = 每 461 毫秒一拍
+        } else {
+          clearInterval(metronomeIntervalRef.current);
+        }
+        return () => clearInterval(metronomeIntervalRef.current);
+      }, [isRunning, phase, audioMode, isMuted]);
+
       // 監聽 phase 與 audioMode 改變來控制背景音樂
       useEffect(() => {
-        if (!bgmAudioRef.current || !bgmRestAudioRef.current || !bgmMetronomeRef.current) return;
+        if (!bgmAudioRef.current || !bgmRestAudioRef.current) return;
 
         // 階段切換時，清除所有漸弱效果，確保音量恢復為最大
         clearInterval(fadeIntervalRef.current);
         if (bgmAudioRef.current) bgmAudioRef.current.volume = 1;
         if (bgmRestAudioRef.current) bgmRestAudioRef.current.volume = 1;
-        if (bgmMetronomeRef.current) bgmMetronomeRef.current.volume = 1;
+        metronomeVolRef.current = 1;
 
         if (isRunning && !isMuted) {
           if (phase === 'workout') {
             bgmRestAudioRef.current.pause();
             
-            // 依照當前選擇的模式播放音樂或節拍器
             if (audioMode === 'music') {
-              bgmMetronomeRef.current.pause();
               bgmAudioRef.current.play().catch(e => console.log("BGM play prevented:", e));
             } else {
-              bgmAudioRef.current.pause();
-              bgmMetronomeRef.current.play().catch(e => console.log("Metronome play prevented:", e));
+              bgmAudioRef.current.pause(); // 節拍器由另一個 useEffect 處理
             }
           } else if (phase === 'rest' || phase === 'halftime') {
             bgmAudioRef.current.pause();
-            bgmMetronomeRef.current.pause();
             bgmRestAudioRef.current.play().catch(e => console.log("Rest BGM play prevented:", e));
           } else {
             bgmAudioRef.current.pause();
             bgmRestAudioRef.current.pause();
-            bgmMetronomeRef.current.pause();
           }
         } else {
           bgmAudioRef.current.pause();
           bgmRestAudioRef.current.pause();
-          bgmMetronomeRef.current.pause();
         }
       }, [phase, isRunning, isMuted, audioMode]);
 
@@ -389,6 +426,7 @@
       };
 
       const startChallenge = (mode) => {
+        initAudioCtx(); // 解鎖
         playSFX(AUDIO_FILES.sfxClick);
         const availableReds = cardData.filter(c => c.team === 'red' && !disabledCardIds.includes(c.id));
         const availableBlues = cardData.filter(c => c.team === 'blue' && !disabledCardIds.includes(c.id));
@@ -415,9 +453,10 @@
       };
 
       const startTimerProcess = () => {
+        initAudioCtx(); // 解鎖
         playSFX(AUDIO_FILES.sfxClick);
         
-        // 💡 手機端強制解鎖所有音效 (包含音樂與節拍器)
+        // 💡 手機端強制解鎖所有 mp3 音效
         if (bgmAudioRef.current && !isMuted) {
             bgmAudioRef.current.volume = 0;
             bgmAudioRef.current.play().then(() => { bgmAudioRef.current.pause(); bgmAudioRef.current.volume = 1; }).catch(e => console.log(e));
@@ -425,10 +464,6 @@
         if (bgmRestAudioRef.current && !isMuted) {
             bgmRestAudioRef.current.volume = 0;
             bgmRestAudioRef.current.play().then(() => { bgmRestAudioRef.current.pause(); bgmRestAudioRef.current.volume = 1; }).catch(e => console.log(e));
-        }
-        if (bgmMetronomeRef.current && !isMuted) {
-            bgmMetronomeRef.current.volume = 0;
-            bgmMetronomeRef.current.play().then(() => { bgmMetronomeRef.current.pause(); bgmMetronomeRef.current.volume = 1; }).catch(e => console.log(e));
         }
 
         setPhase('workout');
@@ -453,35 +488,42 @@
             setTimeLeft(p => {
               const newTime = p - 1;
               
-              // 💡 終極漸弱邏輯 (最後3秒啟動)
+              // 💡 終極漸弱邏輯 (包含 Web Audio 節拍器同步漸弱)
               if (newTime === 3 && !isMuted) {
-                const targetAudio = phase === 'workout' 
-                  ? (audioModeRef.current === 'music' ? bgmAudioRef.current : bgmMetronomeRef.current) 
-                  : ((phase === 'rest' || phase === 'halftime') ? bgmRestAudioRef.current : null);
-                
-                if (targetAudio) {
-                   clearInterval(fadeIntervalRef.current);
-                   let vol = targetAudio.volume;
-                   let ticks = 0;
-                   const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
-
-                   fadeIntervalRef.current = setInterval(() => {
-                       ticks++;
-                       
-                       if (!isIOS) {
-                           // 電腦/Android：指數型銳減，每0.1秒音量打75折，1秒內降至極小聲
-                           vol *= 0.75; 
-                           if (vol <= 0.05) vol = 0;
-                           targetAudio.volume = vol;
-                       }
-
-                       // 不論何種裝置，在倒數大約最後 0.5 秒時(ticks達到25次)，強制暫停音軌
-                       if (ticks >= 25 || vol === 0) {
-                           targetAudio.pause();
-                           clearInterval(fadeIntervalRef.current);
-                       }
-                   }, 100);
+                let targetAudio = null;
+                if (phase === 'workout' && audioModeRef.current === 'music') {
+                   targetAudio = bgmAudioRef.current;
+                } else if (phase === 'rest' || phase === 'halftime') {
+                   targetAudio = bgmRestAudioRef.current;
                 }
+                
+                clearInterval(fadeIntervalRef.current);
+                
+                let vol = 1.0;
+                if (targetAudio) vol = targetAudio.volume;
+                else if (phase === 'workout' && audioModeRef.current === 'metronome') vol = metronomeVolRef.current;
+                
+                let ticks = 0;
+                const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+
+                fadeIntervalRef.current = setInterval(() => {
+                    ticks++;
+                    
+                    if (!isIOS) {
+                        // 電腦/Android：指數型銳減，每0.1秒音量打75折，1秒內降至極小聲
+                        vol *= 0.75; 
+                        if (vol <= 0.05) vol = 0;
+                        if (targetAudio) targetAudio.volume = vol;
+                        metronomeVolRef.current = vol; // 同步減低節拍器音量
+                    }
+
+                    // 不論何種裝置，在倒數大約最後 0.5 秒時，強制暫停音軌與節拍器
+                    if (ticks >= 25 || vol === 0) {
+                        if (targetAudio) targetAudio.pause();
+                        metronomeVolRef.current = 0; // 讓電子節拍器停止發聲
+                        clearInterval(fadeIntervalRef.current);
+                    }
+                }, 100);
               }
 
               if (phase === 'workout' && (newTime === 20 || newTime === 10)) {
@@ -540,7 +582,7 @@
           )}
 
           <header className="bg-white border-b-4 border-amber-100 sticky top-0 z-30 shadow-sm flex-shrink-0">
-            <div className="max-w-5xl mx-auto px-4 py-4 flex flex-col sm:flex-row justify-between items-center gap-4 relative">
+            <div className="max-w-5xl mx-auto px-4 py-4 flex flex-col sm:flex-row justify-between items-center gap-4">
               
               <div className="flex items-center gap-3">
                 <div className="bg-amber-400 p-2 rounded-xl shadow-sm">
@@ -549,29 +591,34 @@
                 <h1 className="text-2xl font-black text-amber-900 tracking-tighter">動物運動森友會</h1>
               </div>
 
-              {/* 🎵 音效切換與靜音群組 */}
-              <div className="absolute top-4 right-4 sm:relative sm:top-0 sm:right-0 flex items-center gap-2">
-                <button 
-                  onClick={() => { playSFX(AUDIO_FILES.sfxClick); setAudioMode(m => m === 'music' ? 'metronome' : 'music'); }} 
-                  className={`w-10 h-10 rounded-full flex items-center justify-center transition-colors shadow-sm border-2 ${audioMode === 'metronome' ? 'bg-indigo-100 text-indigo-600 border-indigo-200' : 'bg-gray-50 text-gray-400 border-gray-200 hover:bg-gray-100'}`}
-                  title={audioMode === 'music' ? "切換為節拍器" : "切換為音樂"}
-                >
-                  <i className={`fa-solid ${audioMode === 'music' ? 'fa-music' : 'fa-stopwatch'}`}></i>
-                </button>
+              {/* 控制區塊容器：在手機上會自動排到標題下方 */}
+              <div className="flex flex-col sm:flex-row items-center gap-4 w-full sm:w-auto">
+                
+                {/* 🎵 音效切換與靜音群組 */}
+                <div className="flex items-center gap-2">
+                  <button 
+                    onClick={() => { playSFX(AUDIO_FILES.sfxClick); initAudioCtx(); setAudioMode(m => m === 'music' ? 'metronome' : 'music'); }} 
+                    className={`w-10 h-10 rounded-full flex items-center justify-center transition-colors shadow-sm border-2 ${audioMode === 'metronome' ? 'bg-indigo-100 text-indigo-600 border-indigo-200' : 'bg-gray-50 text-gray-400 border-gray-200 hover:bg-gray-100'}`}
+                    title={audioMode === 'music' ? "切換為節拍器" : "切換為音樂"}
+                  >
+                    <i className={`fa-solid ${audioMode === 'music' ? 'fa-music' : 'fa-stopwatch'}`}></i>
+                  </button>
 
-                <button 
-                  onClick={() => { playSFX(AUDIO_FILES.sfxClick); setIsMuted(!isMuted); }} 
-                  className={`w-10 h-10 rounded-full flex items-center justify-center transition-colors shadow-sm border-2 ${isMuted ? 'bg-gray-100 text-gray-400 border-gray-200' : 'bg-amber-100 text-amber-600 border-amber-200 hover:bg-amber-200'}`}
-                  title={isMuted ? "取消靜音" : "靜音"}
-                >
-                  <i className={`fa-solid ${isMuted ? 'fa-volume-xmark' : 'fa-volume-high'}`}></i>
-                </button>
+                  <button 
+                    onClick={() => { playSFX(AUDIO_FILES.sfxClick); initAudioCtx(); setIsMuted(!isMuted); }} 
+                    className={`w-10 h-10 rounded-full flex items-center justify-center transition-colors shadow-sm border-2 ${isMuted ? 'bg-gray-100 text-gray-400 border-gray-200' : 'bg-amber-100 text-amber-600 border-amber-200 hover:bg-amber-200'}`}
+                    title={isMuted ? "取消靜音" : "靜音"}
+                  >
+                    <i className={`fa-solid ${isMuted ? 'fa-volume-xmark' : 'fa-volume-high'}`}></i>
+                  </button>
+                </div>
+
+                <div className="flex bg-gray-100 p-1.5 rounded-2xl w-full sm:w-auto justify-center">
+                  <button onClick={() => { playSFX(AUDIO_FILES.sfxClick); initAudioCtx(); setActiveTab('challenge'); setIsRunning(false); setPhase('ready'); }} className={`px-6 py-2 rounded-xl font-black transition-all ${activeTab === 'challenge' ? 'bg-amber-500 text-white shadow-md' : 'text-gray-400'}`}>挑戰模式</button>
+                  <button onClick={() => { playSFX(AUDIO_FILES.sfxClick); initAudioCtx(); setActiveTab('gallery'); }} className={`px-6 py-2 rounded-xl font-black transition-all ${activeTab === 'gallery' ? 'bg-white text-amber-800 shadow-md' : 'text-gray-400'}`}>卡牌圖鑑</button>
+                </div>
               </div>
 
-              <div className="flex bg-gray-100 p-1.5 rounded-2xl w-full sm:w-auto justify-center mt-10 sm:mt-0">
-                <button onClick={() => { playSFX(AUDIO_FILES.sfxClick); setActiveTab('challenge'); setIsRunning(false); setPhase('ready'); }} className={`px-6 py-2 rounded-xl font-black transition-all ${activeTab === 'challenge' ? 'bg-amber-500 text-white shadow-md' : 'text-gray-400'}`}>挑戰模式</button>
-                <button onClick={() => { playSFX(AUDIO_FILES.sfxClick); setActiveTab('gallery'); }} className={`px-6 py-2 rounded-xl font-black transition-all ${activeTab === 'gallery' ? 'bg-white text-amber-800 shadow-md' : 'text-gray-400'}`}>卡牌圖鑑</button>
-              </div>
             </div>
           </header>
 
@@ -587,7 +634,7 @@
                         <div className="text-8xl mb-6 animate-bounce">🏕️</div>
                         <h2 className="text-4xl font-black text-amber-900 mb-4 tracking-tight">選擇今天的任務！</h2>
                         
-                        <div className="flex justify-center gap-4 mb-8">
+                        <div className="flex justify-center gap-4 mb-6">
                           <div className="bg-amber-50 px-4 py-3 rounded-2xl flex items-center gap-3 border border-amber-100 flex-1 justify-center">
                              <i className="fa-solid fa-chart-line text-amber-500 text-2xl"></i>
                              <div className="text-left">
@@ -604,17 +651,21 @@
                           </div>
                         </div>
 
+                        <p className="text-gray-500 font-bold mb-2 text-sm bg-gray-50 p-4 rounded-xl">
+                          紅卡 (有氧) ↔ 藍卡 (肌力) 間歇訓練<br/>
+                          (30秒運動 + 20秒休息)
+                        </p>
+
+                        <p className="text-amber-700 font-bold mb-6 text-sm bg-amber-50 p-4 rounded-xl border border-amber-100 flex items-center justify-center gap-2">
+                          <i className="fa-solid fa-music"></i> 點擊上方按鈕可切換「音樂」與「節拍器」！
+                        </p>
+
                         <button 
-                          onClick={() => { playSFX(AUDIO_FILES.sfxClick); setPhase('pool_selection'); }}
+                          onClick={() => { playSFX(AUDIO_FILES.sfxClick); initAudioCtx(); setPhase('pool_selection'); }}
                           className="mb-6 bg-gray-100 hover:bg-gray-200 text-gray-600 font-bold py-3 px-6 rounded-xl border-2 border-gray-200 transition-colors w-full flex justify-center items-center gap-2"
                         >
                           <i className="fa-solid fa-gear"></i> 自訂牌組設定 (已排除 {disabledCardIds.length} 個動作)
                         </button>
-
-                        <p className="text-gray-500 font-bold mb-6 text-sm bg-gray-50 p-4 rounded-xl">
-                          紅卡 (有氧) ↔ 藍卡 (肌力) 間歇訓練<br/>
-                          (30秒運動 + 20秒休息)
-                        </p>
                         
                         <div className="flex flex-col gap-4">
                           <button onClick={() => startChallenge(5)} className="bg-indigo-500 hover:bg-indigo-600 text-white text-xl font-black px-6 py-4 rounded-2xl shadow-lg transform transition hover:scale-105 active:scale-95 w-full flex justify-between items-center">
@@ -777,10 +828,10 @@
                           </div>
                         </div>
                         <div className="flex gap-2">
-                          <button onClick={() => { playSFX(AUDIO_FILES.sfxClick); setIsRunning(!isRunning); }} className="w-10 h-10 bg-white rounded-xl shadow-sm border border-gray-100 flex items-center justify-center">
+                          <button onClick={() => { playSFX(AUDIO_FILES.sfxClick); initAudioCtx(); setIsRunning(!isRunning); }} className="w-10 h-10 bg-white rounded-xl shadow-sm border border-gray-100 flex items-center justify-center">
                             {isRunning ? <i className="fa-solid fa-pause text-gray-600"></i> : <i className="fa-solid fa-play text-gray-600"></i>}
                           </button>
-                          <button onClick={() => { playSFX(AUDIO_FILES.sfxClick); setIsRunning(false); setPhase('ready'); }} className="w-10 h-10 bg-white rounded-xl shadow-sm border border-gray-100 flex items-center justify-center">
+                          <button onClick={() => { playSFX(AUDIO_FILES.sfxClick); initAudioCtx(); setIsRunning(false); setPhase('ready'); }} className="w-10 h-10 bg-white rounded-xl shadow-sm border border-gray-100 flex items-center justify-center">
                             <i className="fa-solid fa-rotate-left text-gray-600"></i>
                           </button>
                         </div>
