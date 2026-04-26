@@ -110,9 +110,9 @@
     };
 
     // --- 音效檔案位置 (請確保這些檔案存在於您的專案中) ---
-    // 💡 我們將剛才的 Jump & Play Power-Up.mp3 設定在這裡
+    // 💡 這裡已經把路徑更新為您的新檔名 sport.mp3
     const AUDIO_FILES = {
-      bgmWorkout: './audio/Jump & Play Power-Up.mp3', // 🎵 Suno BGM!
+      bgmWorkout: './audio/sport.mp3', // 🎵 更名的運動 BGM
       sfxDrawCard: 'https://assets.mixkit.co/active_storage/sfx/2568/2568-preview.mp3', // 唰一聲抽卡
       sfxSuccess: 'https://assets.mixkit.co/active_storage/sfx/2000/2000-preview.mp3',   // 歡呼聲
       sfxClick: 'https://assets.mixkit.co/active_storage/sfx/2571/2571-preview.mp3'      // 按鈕點擊
@@ -230,6 +230,49 @@
       const [restPrompt, setRestPrompt] = useState("");
       const [stats, setStats] = useState({ minutesToday: 0, daysThisWeek: 0 });
 
+      // --- 喚醒鎖定 (WakeLock) API 控制，防止螢幕變暗 ---
+      const wakeLockRef = useRef(null);
+
+      const requestWakeLock = async () => {
+        try {
+          if ('wakeLock' in navigator) {
+            wakeLockRef.current = await navigator.wakeLock.request('screen');
+            console.log('螢幕喚醒已開啟 (Screen Wake Lock active)');
+          }
+        } catch (err) {
+          console.log('無法開啟螢幕喚醒:', err);
+        }
+      };
+
+      const releaseWakeLock = async () => {
+        if (wakeLockRef.current !== null) {
+          await wakeLockRef.current.release();
+          wakeLockRef.current = null;
+          console.log('螢幕喚醒已釋放 (Screen Wake Lock released)');
+        }
+      };
+
+      // 當 isRunning 變更時，請求或釋放喚醒鎖定
+      useEffect(() => {
+        if (isRunning) {
+          requestWakeLock();
+        } else {
+          releaseWakeLock();
+        }
+        return () => releaseWakeLock(); // 元件卸載時務必釋放
+      }, [isRunning]);
+
+      // 當使用者切換分頁再回來時，如果還在運動中，重新請求喚醒鎖定
+      useEffect(() => {
+        const handleVisibilityChange = () => {
+          if (document.visibilityState === 'visible' && isRunning) {
+            requestWakeLock();
+          }
+        };
+        document.addEventListener('visibilitychange', handleVisibilityChange);
+        return () => document.removeEventListener('visibilitychange', handleVisibilityChange);
+      }, [isRunning]);
+
       // --- 音樂與音效控制 (Audio Refs) ---
       const [isMuted, setIsMuted] = useState(false);
       const bgmAudioRef = useRef(null);
@@ -269,6 +312,7 @@
         if (!bgmAudioRef.current) return;
 
         if (phase === 'workout' && isRunning && !isMuted) {
+          bgmAudioRef.current.volume = 1; // 恢復音量
           bgmAudioRef.current.play().catch(e => console.log("BGM play prevented:", e));
         } else {
           bgmAudioRef.current.pause();
@@ -278,7 +322,6 @@
             playSFX(AUDIO_FILES.sfxSuccess);
         }
       }, [phase, isRunning, isMuted]);
-
 
       useEffect(() => {
         const currentStats = getStats();
@@ -350,6 +393,14 @@
           timer = setInterval(() => {
             setTimeLeft(p => {
               const newTime = p - 1;
+              
+              // 💡 音量漸弱邏輯：當處於 workout 階段，且時間剩下 3 秒以內時，音量逐漸減小
+              if (phase === 'workout' && bgmAudioRef.current && !isMuted) {
+                if (newTime <= 3 && newTime > 0) {
+                   bgmAudioRef.current.volume = newTime / 3; // 音量變為 0.66 -> 0.33
+                }
+              }
+
               if (phase === 'workout' && (newTime === 20 || newTime === 10)) {
                 setEncouragement(encouragementMessages[Math.floor(Math.random() * encouragementMessages.length)]);
                 setTimeout(() => setEncouragement(null), 3000);
@@ -392,7 +443,7 @@
       }, [isRunning, timeLeft, phase, currentRound, currentIndex, challengeMode]);
 
       return (
-        <div className="pb-20 relative">
+        <div className="pb-20 relative min-h-screen flex flex-col">
           
           {/* 🧪 測試快轉按鈕 */}
           {SHOW_TEST_BUTTON && activeTab === 'challenge' && isRunning && phase !== 'briefing' && (
@@ -406,7 +457,7 @@
             </div>
           )}
 
-          <header className="bg-white border-b-4 border-amber-100 sticky top-0 z-30 shadow-sm">
+          <header className="bg-white border-b-4 border-amber-100 sticky top-0 z-30 shadow-sm flex-shrink-0">
             <div className="max-w-5xl mx-auto px-4 py-4 flex flex-col sm:flex-row justify-between items-center gap-4 relative">
               
               <div className="flex items-center gap-3">
@@ -432,57 +483,67 @@
             </div>
           </header>
 
-          <main className="max-w-6xl mx-auto px-4 py-8">
+          <main className="max-w-6xl mx-auto px-4 py-8 flex-1 w-full">
             
             {/* --- 挑戰模式 --- */}
             {activeTab === 'challenge' && (
-              <div className="max-w-xl mx-auto animate-fade-in">
+              <div className="max-w-xl mx-auto animate-fade-in flex flex-col justify-between h-full">
                 <div className="bg-white rounded-[2rem] shadow-2xl p-6 sm:p-12 border-8 border-amber-50 relative overflow-hidden">
                   
                   {phase === 'ready' ? (
-                    <div className="text-center py-4">
-                      <div className="text-8xl mb-6 animate-bounce">🏕️</div>
-                      <h2 className="text-4xl font-black text-amber-900 mb-4 tracking-tight">選擇今天的任務！</h2>
-                      
-                      <div className="flex justify-center gap-4 mb-8">
-                        <div className="bg-amber-50 px-4 py-3 rounded-2xl flex items-center gap-3 border border-amber-100 flex-1 justify-center">
-                           <i className="fa-solid fa-chart-line text-amber-500 text-2xl"></i>
-                           <div className="text-left">
-                             <div className="text-[10px] font-bold text-gray-400">今日運動時長</div>
-                             <div className="text-base font-black text-amber-900">{stats.minutesToday} 分鐘</div>
-                           </div>
+                    <div className="text-center py-4 flex flex-col h-full">
+                      <div>
+                        <div className="text-8xl mb-6 animate-bounce">🏕️</div>
+                        <h2 className="text-4xl font-black text-amber-900 mb-4 tracking-tight">選擇今天的任務！</h2>
+                        
+                        <div className="flex justify-center gap-4 mb-8">
+                          <div className="bg-amber-50 px-4 py-3 rounded-2xl flex items-center gap-3 border border-amber-100 flex-1 justify-center">
+                             <i className="fa-solid fa-chart-line text-amber-500 text-2xl"></i>
+                             <div className="text-left">
+                               <div className="text-[10px] font-bold text-gray-400">今日運動時長</div>
+                               <div className="text-base font-black text-amber-900">{stats.minutesToday} 分鐘</div>
+                             </div>
+                          </div>
+                          <div className="bg-blue-50 px-4 py-3 rounded-2xl flex items-center gap-3 border border-blue-100 flex-1 justify-center">
+                             <i className="fa-regular fa-calendar text-blue-500 text-2xl"></i>
+                             <div className="text-left">
+                               <div className="text-[10px] font-bold text-gray-400">本週運動天數</div>
+                               <div className="text-base font-black text-blue-900">{stats.daysThisWeek} 天</div>
+                             </div>
+                          </div>
                         </div>
-                        <div className="bg-blue-50 px-4 py-3 rounded-2xl flex items-center gap-3 border border-blue-100 flex-1 justify-center">
-                           <i className="fa-regular fa-calendar text-blue-500 text-2xl"></i>
-                           <div className="text-left">
-                             <div className="text-[10px] font-bold text-gray-400">本週運動天數</div>
-                             <div className="text-base font-black text-blue-900">{stats.daysThisWeek} 天</div>
-                           </div>
+
+                        <button 
+                          onClick={() => { playSFX(AUDIO_FILES.sfxClick); setPhase('pool_selection'); }}
+                          className="mb-6 bg-gray-100 hover:bg-gray-200 text-gray-600 font-bold py-3 px-6 rounded-xl border-2 border-gray-200 transition-colors w-full flex justify-center items-center gap-2"
+                        >
+                          <i className="fa-solid fa-gear"></i> 自訂牌組設定 (已排除 {disabledCardIds.length} 個動作)
+                        </button>
+
+                        <p className="text-gray-500 font-bold mb-6 text-sm bg-gray-50 p-4 rounded-xl">
+                          紅卡 (有氧) ↔ 藍卡 (肌力) 間歇訓練<br/>
+                          (30秒運動 + 20秒休息)
+                        </p>
+                        
+                        <div className="flex flex-col gap-4">
+                          <button onClick={() => startChallenge(5)} className="bg-indigo-500 hover:bg-indigo-600 text-white text-xl font-black px-6 py-4 rounded-2xl shadow-lg transform transition hover:scale-105 active:scale-95 w-full flex justify-between items-center">
+                            <span>5 分鐘挑戰 (做一輪)</span>
+                            <i className="fa-solid fa-chevron-right opacity-70"></i>
+                          </button>
+                          <button onClick={() => startChallenge(10)} className="bg-green-500 hover:bg-green-600 text-white text-xl font-black px-6 py-4 rounded-2xl shadow-lg transform transition hover:scale-105 active:scale-95 w-full flex justify-between items-center">
+                            <span>10 分鐘挑戰 (做兩輪)</span>
+                            <i className="fa-solid fa-chevron-right opacity-70"></i>
+                          </button>
                         </div>
                       </div>
 
-                      <button 
-                        onClick={() => { playSFX(AUDIO_FILES.sfxClick); setPhase('pool_selection'); }}
-                        className="mb-6 bg-gray-100 hover:bg-gray-200 text-gray-600 font-bold py-3 px-6 rounded-xl border-2 border-gray-200 transition-colors w-full flex justify-center items-center gap-2"
-                      >
-                        <i className="fa-solid fa-gear"></i> 自訂牌組設定 (已排除 {disabledCardIds.length} 個動作)
-                      </button>
-
-                      <p className="text-gray-500 font-bold mb-6 text-sm bg-gray-50 p-4 rounded-xl">
-                        紅卡 (有氧) ↔ 藍卡 (肌力) 間歇訓練<br/>
-                        (30秒運動 + 20秒休息)
-                      </p>
-                      
-                      <div className="flex flex-col gap-4">
-                        <button onClick={() => startChallenge(5)} className="bg-indigo-500 hover:bg-indigo-600 text-white text-xl font-black px-6 py-4 rounded-2xl shadow-lg transform transition hover:scale-105 active:scale-95 w-full flex justify-between items-center">
-                          <span>5 分鐘挑戰 (做一輪)</span>
-                          <i className="fa-solid fa-chevron-right opacity-70"></i>
-                        </button>
-                        <button onClick={() => startChallenge(10)} className="bg-green-500 hover:bg-green-600 text-white text-xl font-black px-6 py-4 rounded-2xl shadow-lg transform transition hover:scale-105 active:scale-95 w-full flex justify-between items-center">
-                          <span>10 分鐘挑戰 (做兩輪)</span>
-                          <i className="fa-solid fa-chevron-right opacity-70"></i>
-                        </button>
+                      {/* 💡 作者宣告與連結 (置於初始畫面最下方) */}
+                      <div className="mt-8 pt-4 border-t-2 border-amber-50">
+                        <p className="text-gray-400 font-bold text-sm">
+                          蕭宇超製作 <a href="https://www.smilecloud.tw" target="_blank" rel="noopener noreferrer" className="text-amber-500 hover:text-amber-600 underline ml-1">www.smilecloud.tw</a>
+                        </p>
                       </div>
+
                     </div>
 
                   ) : phase === 'pool_selection' ? (
